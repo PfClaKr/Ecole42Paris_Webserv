@@ -11,7 +11,7 @@ class Request
 {
 	public:
 		std::map<std::string, std::string> startline;
-		std::vector<std::string> header;
+		std::map<std::string, std::string> header;
 		std::string body;
 	public:
 		Request(){

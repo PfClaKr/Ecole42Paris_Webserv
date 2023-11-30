@@ -40,6 +40,37 @@ int parse_http_request_startline(Request &request, std::string startline)
 	return 0;
 }
 
+void str_trim(std::string &str)
+{
+	str.erase(0, str.find_first_not_of(" "));
+	str.erase(str.find_last_not_of(" ") + 1);
+}
+
+int parse_https_request_header(Request &request, std::string headerline)
+{
+	size_t last = 0, next = 0;
+	std::string delim = ":";
+	std::string key, val;
+	next = headerline.find(delim, last);
+	if (next == std::string::npos)
+		return 1;
+	key = headerline.substr(last, next - last);
+	transform(key.begin(), key.end(), key.begin(), ::tolower);
+	if (key.find(' ') != std::string::npos)
+		return 1;
+	last = next + 1;
+	next = headerline.find(delim, last);
+	if (next != std::string::npos)
+		return 1;
+	val = headerline.substr(last, next - last);
+	str_trim(val);
+	if (val.find(' ') != std::string::npos)
+		return 1;
+	transform(val.begin(), val.end(), val.begin(), ::tolower);
+	request.header[key] = val;
+	return 0;
+}
+
 int parse_http_request(Request &request, std::string req)
 {
 	size_t last = 0, next = 0;
@@ -58,10 +89,11 @@ int parse_http_request(Request &request, std::string req)
 		last = next + 2;
 		if (token == "") // double CRLF '\r\n\r\n' = the end of header
 			break ;
-		request.header.push_back(token); // split into key:value format on response side
+		if (parse_https_request_header(request, token) == 1)
+			return 400;
 	}
 	request.body = req.substr(last, std::string::npos);
-	return 0;
+	return 200;
 }
 
 void print_http_request(Request &request)
@@ -71,10 +103,8 @@ void print_http_request(Request &request)
 	std::cout << "Uri    : " << request.startline["uri"] << std::endl;
 	std::cout << "Version: " << request.startline["http_version"] << std::endl;
 	std::cout << "=============================================\n";
-	for (int i = 0; i < request.header.size(); i++)
-	{
-		std::cout << "Header : " << request.header[i] << std::endl;
-	}
+	std::cout << "host   : " << request.header["host"] << std::endl;
+	std::cout << "connect: " << request.header["connection"] << std::endl;
 	std::cout << "=============================================\n";
 	std::cout << "Body   :\n" << request.body;
 	std::cout << "=============================================\n";
@@ -84,7 +114,10 @@ int main()
 {
 	Request request;
 
-	parse_http_request(request, "GET / HTTP/1.1\r\nHost: www.google.com\r\nConnection: close\r\n\r\n<html>\r\n\t<body></body>\r\n</html>\r\n");
+	int status = parse_http_request(request, "GET / HTTP/1.\r\nHost: www.google.com\r\nConnection: close\r\n\r\n<html>\r\n\t<body></body>\r\n</html>\r\n");
+	std::cout << "status: " << status << std::endl;
+	if (status != 200)
+		return 1;
 	print_http_request(request);
 	return 0;
 }
