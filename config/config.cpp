@@ -135,10 +135,8 @@ void sp(int n)
 	for (int i = 0; i < n; i++)
 		std::cout << " ";
 }
-void print_context(Context c, int indent)
+void print_context(Context &c, int indent)
 {
-	// sp(indent);
-	// std::cout << "directives: " << c.directive.size() << "\n";
 	std::map<std::string, std::vector<std::string> >::iterator it;
 	for (it = c.directive.begin(); it != c.directive.end(); it++)
 	{
@@ -150,25 +148,21 @@ void print_context(Context c, int indent)
 		}
 		std::cout << "\n";
 	}
-	// sp(indent);
-	// std::cout << "[directives]\n";
-	if (c.child.size() > 0)
+	for (int i = 0; i < c.child.size(); i++)
 	{
-		for (int i = 0; i < c.child.size(); i++)
-		{
-			sp(indent);
-			std::cout << (*c.child[i]).name;
-			for (int j = 0; j < (*c.child[i]).args.size(); j++)
-				std::cout << " " << (*c.child[i]).args[j];
-			std::cout << " {\n";
-			print_context(*c.child[i], indent + 4);
-			sp(indent);
-			std::cout << "}\n";
-		}
+		sp(indent);
+		std::cout << (*c.child[i]).name;
+		for (int j = 0; j < (*c.child[i]).args.size(); j++)
+			std::cout << " " << (*c.child[i]).args[j];
+		std::cout << " {\n";
+		print_context(*c.child[i], indent + 4);
+		sp(indent);
+		std::cout << "}\n";
 	}
+	return ;
 }
 
-void print_config(Context config)
+void print_config(Context &config)
 {
 	print_context(config, 0);
 }
