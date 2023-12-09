@@ -88,8 +88,18 @@ int parse_context(Context &config, std::fstream &config_file, std::string str)
 			std::istream_iterator<std::string> begin(ss);
 			std::istream_iterator<std::string> end;
 			std::vector<std::string> args(std::next(begin), end);
+			/*
+			* Need to find another solution for parsing context and context name
+			* 	XXXXX { - good
+			* 	XXXXX
+			* 	{       - bad
+			* 	XXXXX{  - also bad
+			*/
 			if (args.size() > 1)
+			{
+				args.erase(args.end() - 1);
 				config.child.back()->args = args;
+			}
 			parse_context(*config.child.back(), config_file, str.erase(str.find("{")));
 			continue ; // recursive exit
 		}
@@ -98,73 +108,77 @@ int parse_context(Context &config, std::fstream &config_file, std::string str)
 	return 0;
 }
 
-int parse_config(std::vector<Context *> &config, std::string filename)
+int parse_config(Context &config, std::string filename)
 {
 	std::fstream config_file;
 	config_file.open(filename, std::fstream::in);
 	if (!config_file.is_open())
 		return -1;
-	config.push_back(new Context());
 	for (std::string str; std::getline(config_file, str); )
 	{
 		rm_after_delim(str, "#");
 		if (!str.empty() && str.find("{") != std::string::npos)
 		{
-			config.back()->child.push_back(new Context(context_name(str)));
-			parse_context(*config.back()->child.back(), config_file, str.erase(str.find("{")));
+			config.child.push_back(new Context(context_name(str)));
+			parse_context(*config.child.back(), config_file, str.erase(str.find("{")));
 		} else {
 			if (!str.empty())
-				parse_context_directives(*config[0], str);
+				parse_context_directives(config, str);
 		}
 	}
 	config_file.close();
 	return 0;
 }
-
-void print_config(std::vector<Context *> config)
+#include <iomanip>
+void sp(int n)
 {
-	for (int i = 0; i < config.size(); i++)
+	for (int i = 0; i < n; i++)
+		std::cout << " ";
+}
+void print_context(Context c, int indent)
+{
+	// sp(indent);
+	// std::cout << "directives: " << c.directive.size() << "\n";
+	std::map<std::string, std::vector<std::string> >::iterator it;
+	for (it = c.directive.begin(); it != c.directive.end(); it++)
 	{
-		std::cout << "name[0] :\t." << config[i]->name << ".\n";
-		for (int j = 0; j < config[i]->child.size(); j++)
+		sp(indent);
+		std::cout << it->first << " ";
+		for (int i = 0; i < it->second.size(); i++)
 		{
-			std::cout << "name[1] :\t\t." << config[i]->child[j]->name << ".\n";
-			for (int k = 0; k < config[i]->child[j]->child.size(); k++)
-			{
-				std::cout << "name[2] :\t\t\t." << config[i]->child[j]->child[k]->name << ".\n";
-			}
+			std::cout << it->second[i] << " ";
+		}
+		std::cout << "\n";
+	}
+	// sp(indent);
+	// std::cout << "[directives]\n";
+	if (c.child.size() > 0)
+	{
+		for (int i = 0; i < c.child.size(); i++)
+		{
+			sp(indent);
+			std::cout << (*c.child[i]).name;
+			for (int j = 0; j < (*c.child[i]).args.size(); j++)
+				std::cout << " " << (*c.child[i]).args[j];
+			std::cout << " {\n";
+			print_context(*c.child[i], indent + 4);
+			sp(indent);
+			std::cout << "}\n";
 		}
 	}
+}
 
-
-	Context *main, *one, *two, *three, *four;
-	
-	main = config[0];
-	one = config[0]->child[0];
-	two = config[0]->child[1];
-	three = two->child[0];
-	four = three->child[0];
-
-	std::cout << "name: " << main->name << "\n";
-	std::cout << main->directive["pid"][0] << "\n";
-	std::cout << "name: " << one->name << "\n";
-	std::cout << one->directive["worker_connections"][0] << "\n";
-	std::cout << "name: " << two->name << "\n";
-	std::cout << two->directive["index"][0] << " " << two->directive["index"][1] << " " << two->directive["index"][2] << "\n";
-	std::cout << "name: " << three->name << "\n";
-	std::cout << "name: " << four->name << "\n";
-	std::cout << "args: " << four->args[0] << " " << four->args[1] << "\n";
-	std::cout << four->directive["fastcgi_pass"][0] << "\n";
+void print_config(Context config)
+{
+	print_context(config, 0);
 }
 
 int main()
 {
-	std::vector<Context *> config;
+	Context config;
 	std::cout << "parse config: \n\n";
 	if (parse_config(config, "default_config") == -1)
 		return 0;
 	print_config(config);
-	for (int i = 0; i < config.size(); i++)
-		delete config[i];
 	return 0;
 }
