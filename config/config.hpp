@@ -21,7 +21,14 @@ public:
 	};
 	Context(std::string name){
 		this->name = name;
-	}
+	};
+	~Context(){
+		for (int i = 0; i < child.size(); i++)
+		{
+			delete child[i];
+		}
+	};
+
 };
 
 

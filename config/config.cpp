@@ -10,11 +10,22 @@ std::string context_name(std::string str)
 	return str;
 }
 
-std::string temp_trim(std::string s)
+void temp_trim(std::string &s)
 {
+	// std::cout << "test: " << s.find_first_not_of(" \t\v\r\n") << "\n";
+	// if (s.find_first_not_of(" \t\v\r\n") == std::string::npos)
+	// {
+	// 	s.clear();
+	// 	return ;
+	// }
 	s.erase(0, s.find_first_not_of(" \t\v\r")); //str trim
 	s.erase(s.find_last_not_of(" \t\v\r") + 1);
-	return s;
+}
+
+void rm_after_delim(std::string &str, std::string delim)
+{
+	str = str.substr(0, str.find(delim, 0));
+	temp_trim(str);
 }
 
 std::vector<std::string> str_split_vec(std::string s)
@@ -36,6 +47,7 @@ bool is_comment(char *s)
 
 int parse_context_directives(Context &config, std::string str)
 {
+	rm_after_delim(str, "#");
 	if (str.empty())
 		return 0;
 	std::replace(str.begin(), str.end(), '\t', ' ');
@@ -50,14 +62,10 @@ int parse_context_directives(Context &config, std::string str)
 	char *p = strtok(s, ";");
 	while (p != NULL)
 	{
-		if (!is_comment(p))
-		{
-			std::vector<std::string> v = str_split_vec(p);
-			std::string k = v[0];
-			v.erase(v.begin());
-			config.directive[k] = v;
-			// std::cout << "test: " << v.front() << "\n";
-		}
+		std::vector<std::string> v = str_split_vec(p);
+		std::string k = v[0];
+		v.erase(v.begin());
+		config.directive[k] = v;
 		p = strtok(NULL, ";");
 	}
 	return 0;
@@ -68,6 +76,7 @@ int parse_context(Context &config, std::fstream &config_file, std::string str)
 	// std::cout << "context name: " << str << "\n";
 	while (!config_file.eof() && std::getline(config_file, str))
 	{
+		rm_after_delim(str, "#");
 		if (str.find("}") != std::string::npos)
 			break ;
 		if (str.empty())
@@ -82,7 +91,7 @@ int parse_context(Context &config, std::fstream &config_file, std::string str)
 			if (args.size() > 1)
 				config.child.back()->args = args;
 			parse_context(*config.child.back(), config_file, str.erase(str.find("{")));
-			continue ;
+			continue ; // recursive exit
 		}
 		parse_context_directives(config, str);
 	}
@@ -98,20 +107,16 @@ int parse_config(std::vector<Context *> &config, std::string filename)
 	config.push_back(new Context());
 	for (std::string str; std::getline(config_file, str); )
 	{
+		rm_after_delim(str, "#");
 		if (!str.empty() && str.find("{") != std::string::npos)
 		{
 			config.back()->child.push_back(new Context(context_name(str)));
-			//std::cout << config.back()->name << " vector: " << str << "\n";
-			// std::cout << "big context\n";
 			parse_context(*config.back()->child.back(), config_file, str.erase(str.find("{")));
-			// std::cout << "out of parse_context: " << str << "\n";
 		} else {
 			if (!str.empty())
 				parse_context_directives(*config[0], str);
-			// std::cout << "else: " << str << "\n";
 		}
 	}
-
 	config_file.close();
 	return 0;
 }
@@ -156,7 +161,10 @@ int main()
 {
 	std::vector<Context *> config;
 	std::cout << "parse config: \n\n";
-	parse_config(config, "default_config");
+	if (parse_config(config, "default_config") == -1)
+		return 0;
 	print_config(config);
+	for (int i = 0; i < config.size(); i++)
+		delete config[i];
 	return 0;
 }
