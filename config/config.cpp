@@ -22,9 +22,13 @@ void temp_trim(std::string &s)
 	s.erase(s.find_last_not_of(" \t\v\r") + 1);
 }
 
-void rm_after_delim(std::string &str, std::string delim)
+void preprocess(std::string &str)
 {
-	str = str.substr(0, str.find(delim, 0));
+	str = str.substr(0, str.find("#", 0));
+	std::replace(str.begin(), str.end(), '\t', ' ');
+	std::replace(str.begin(), str.end(), '\r', ' ');
+	std::replace(str.begin(), str.end(), '\n', ' ');
+	std::replace(str.begin(), str.end(), '\v', ' ');
 	temp_trim(str);
 }
 
@@ -47,7 +51,7 @@ bool is_comment(char *s)
 
 int parse_context_directives(Context &config, std::string str)
 {
-	rm_after_delim(str, "#");
+	preprocess(str);
 	if (str.empty())
 		return 0;
 	std::replace(str.begin(), str.end(), '\t', ' ');
@@ -76,7 +80,7 @@ int parse_context(Context &config, std::fstream &config_file, std::string str)
 	// std::cout << "context name: " << str << "\n";
 	while (!config_file.eof() && std::getline(config_file, str))
 	{
-		rm_after_delim(str, "#");
+		preprocess(str);
 		if (str.find("}") != std::string::npos)
 			break ;
 		if (str.empty())
@@ -87,7 +91,7 @@ int parse_context(Context &config, std::fstream &config_file, std::string str)
 			std::stringstream ss(str);
 			std::istream_iterator<std::string> begin(ss);
 			std::istream_iterator<std::string> end;
-			std::vector<std::string> args(std::next(begin), end);
+			std::vector<std::string> args(++begin, end);
 			/*
 			* Need to find another solution for parsing context and context name
 			* 	XXXXX { - good
@@ -111,12 +115,12 @@ int parse_context(Context &config, std::fstream &config_file, std::string str)
 int parse_config(Context &config, std::string filename)
 {
 	std::fstream config_file;
-	config_file.open(filename, std::fstream::in);
+	config_file.open(filename.c_str(), std::fstream::in);
 	if (!config_file.is_open())
 		return -1;
 	for (std::string str; std::getline(config_file, str); )
 	{
-		rm_after_delim(str, "#");
+		preprocess(str);
 		if (!str.empty() && str.find("{") != std::string::npos)
 		{
 			config.child.push_back(new Context(context_name(str)));
@@ -142,17 +146,17 @@ void print_context(Context &c, int indent)
 	{
 		sp(indent);
 		std::cout << it->first << " ";
-		for (int i = 0; i < it->second.size(); i++)
+		for (unsigned long i = 0; i < it->second.size(); i++)
 		{
 			std::cout << it->second[i] << " ";
 		}
 		std::cout << "\n";
 	}
-	for (int i = 0; i < c.child.size(); i++)
+	for (unsigned long i = 0; i < c.child.size(); i++)
 	{
 		sp(indent);
 		std::cout << (*c.child[i]).name;
-		for (int j = 0; j < (*c.child[i]).args.size(); j++)
+		for (unsigned long j = 0; j < (*c.child[i]).args.size(); j++)
 			std::cout << " " << (*c.child[i]).args[j];
 		std::cout << " {\n";
 		print_context(*c.child[i], indent + 4);

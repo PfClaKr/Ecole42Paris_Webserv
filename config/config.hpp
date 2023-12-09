@@ -7,6 +7,10 @@
 # include <vector>
 # include <bits/stdc++.h>
 # include <fstream>
+# include <iterator>
+
+// can i use this?
+# include <algorithm>
 
 class Context
 {
@@ -23,7 +27,7 @@ public:
 		this->name = name;
 	};
 	~Context(){
-		for (int i = 0; i < child.size(); i++)
+		for (unsigned long i = 0; i < child.size(); i++)
 		{
 			delete child[i];
 		}
