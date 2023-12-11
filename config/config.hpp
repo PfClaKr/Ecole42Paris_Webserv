@@ -8,8 +8,6 @@
 # include <bits/stdc++.h>
 # include <fstream>
 # include <iterator>
-
-// can i use this?
 # include <algorithm>
 
 class Context
@@ -32,7 +30,20 @@ public:
 			delete child[i];
 		}
 	};
-
+	class FatalErrorException : public std::exception
+	{
+		virtual const char* what() const throw()
+		{
+			return "Fatal Error";
+		}
+	};
+	class SyntaxErrorException : public std::exception
+	{
+		virtual const char* what() const throw()
+		{
+			return "Syntax Error";
+		}
+	};
 };
 
 
