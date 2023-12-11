@@ -181,10 +181,37 @@ void print_config(Context &config)
 
 /*
 *	TODO:
-*	 - lexer
+*	 - lexer						done
 *	 - host:listen parsing/get (set default value?)
-*	 - [server contexts] getter
+*	 - [server contexts] getter				done
 */
+
+void get_servers(Context &c, std::vector<Context *> &servers)
+{
+	if (c.name.compare("server") == 0)
+		servers.push_back(&c);
+	for (unsigned long i = 0; i < c.child.size(); i++)
+	{
+		get_servers(*c.child[i], servers);
+	}
+	return ;
+}
+
+void print_servers(std::vector<Context *> &servers)
+{
+	for (unsigned long i = 0; i < servers.size(); i++)
+	{
+		std::map<std::string, std::vector<std::string> >::iterator it;
+		for (it = servers[i]->directive.begin(); it != servers[i]->directive.end(); it++)
+		{
+			std::cout << it->first;
+			for (unsigned long j = 0; j < it->second.size(); j++)
+				std::cout << " " << it->second[j];
+			std::cout << "\n";
+		}
+		std::cout << "\n";
+	}
+}
 
 int main()
 {
@@ -198,6 +225,11 @@ int main()
 	{
 		std::cerr << e.what() << "\n";
 	}
-	print_config(config);
+	// print_config(config);
+
+	
+	std::vector<Context *> servers;
+	get_servers(config, servers);
+	print_servers(servers);
 	return 0;
 }

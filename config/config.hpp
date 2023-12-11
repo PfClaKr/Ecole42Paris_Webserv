@@ -23,6 +23,13 @@ public:
 	};
 	Context(std::string name){
 		this->name = name;
+		// if need to set default value:
+		//
+		// if (this->name.compare("server") == 0)
+		// {
+		// 	this->directive["host"].push_back("0.0.0.0");
+		// 	this->directive["listen"].push_back("80");
+		// }
 	};
 	~Context(){
 		for (unsigned long i = 0; i < child.size(); i++)
