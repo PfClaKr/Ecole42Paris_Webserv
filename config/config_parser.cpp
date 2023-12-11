@@ -99,7 +99,7 @@ static void parse_context_directives(Context &config, std::string str)
 	}
 }
 
-static void parse_context(Context &config, std::fstream &config_file)
+static void parse_context(Context &config, std::fstream &config_file, int &context_level)
 {
 	std::string str;
 	while (!config_file.eof() && std::getline(config_file, str))
@@ -108,11 +108,17 @@ static void parse_context(Context &config, std::fstream &config_file)
 		if (lexer_context(str) == -1)
 			throw Context::SyntaxErrorException();
 		if (str.find("}") != std::string::npos)
+		{
+			context_level--;
 			break ;
+		}
+		if (context_level < 0)
+			throw Context::SyntaxErrorException();
 		if (str.empty())
 			continue ;
 		if (str.find("{") != std::string::npos)
 		{
+			context_level++;
 			config.add_child(new Context(context_name(str)));
 			std::stringstream ss(str);
 			std::istream_iterator<std::string> begin(ss);
@@ -123,7 +129,7 @@ static void parse_context(Context &config, std::fstream &config_file)
 				args.erase(args.end() - 1);
 				config.get_child().back()->set_args(args);
 			}
-			parse_context(*config.get_child().back(), config_file);
+			parse_context(*config.get_child().back(), config_file, context_level);
 			continue ;
 		}
 		parse_context_directives(config, str);
@@ -136,7 +142,10 @@ void parse_config(Context &config, std::string filename)
 	config_file.open(filename.c_str(), std::fstream::in);
 	if (!config_file.is_open())
 		throw Context::FatalErrorException();
-	parse_context(config, config_file);
+	int context_level = 0;
+	parse_context(config, config_file, context_level);
+	if (context_level != 0)
+		throw Context::SyntaxErrorException();
 	config_file.close();
 }
 
@@ -153,6 +162,7 @@ void parse_config(Context &config, std::string filename)
 // 	catch (std::exception &e)
 // 	{
 // 		std::cerr << e.what() << "\n";
+// 		return 0;
 // 	}
 // 	print_config(config);
 // 	try

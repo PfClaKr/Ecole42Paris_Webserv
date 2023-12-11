@@ -2,7 +2,7 @@
 # define SERVER_HPP
 
 #include "socket.hpp"
-#include "../config/config.hpp"
+#include "../config/context.hpp"
 #include "../http_request/request.hpp"
 #include "../http_response/response.hpp"
 
