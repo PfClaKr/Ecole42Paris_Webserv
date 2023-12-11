@@ -5,7 +5,9 @@ VPATH = http_request/ http_response/ server_engine/ config/
 SRCS =	main.cpp \
 		request.cpp \
 		response.cpp \
-		config.cpp \
+		context.cpp \
+		config_parser.cpp \
+		config_tools.cpp \
 		server.cpp \
 		socket.cpp
 
