@@ -10,7 +10,7 @@ SRCS =	main.cpp \
 		socket.cpp
 
 OBJDIR = .obj
-OBJS = $(SRCS:%.c=$(OBJDIR)/%.o)
+OBJS = $(SRCS:%.cpp=$(OBJDIR)/%.o)
 
 RM = rm -rf
 
@@ -19,7 +19,6 @@ CXX_FLAGS = -g3 #-Wextra -Wall -Werror
 HEAD = -I includes
 
 ${OBJDIR}/%.o : %.cpp | $(OBJDIR)
-	echo g
 	${CC} ${CXX_FLAGS} ${HEAD} -c $< -o $@
 
 $(NAME) : ${OBJS}

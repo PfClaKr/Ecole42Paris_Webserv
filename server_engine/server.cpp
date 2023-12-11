@@ -13,7 +13,7 @@ void	add_fd_in_epoll(int epoll_fd, int fd, uint32_t opt)
 	}
 }
 
-int find_pair_by_key(std::vector<std::pair<Socket, Context>> &pair, int &key)
+int find_pair_by_key(std::vector<std::pair<Socket, Context *>> &pair, int &key)
 {
 	for (int i = 0; i < pair.size(); i++)
 	{
@@ -80,9 +80,12 @@ void	Server::init_request(int event_fd, epoll_event *epoll_ev)
 	}
 }
 
-void	Server::init_response(int event_fd)
+void	Server::init_response(int event_fd, epoll_event *epoll_ev)
 {
-	std::cout<<"hi"<<std::endl;
+	char as[] = "HTTP/1.1 200 OK";
+	int	send_size = send(event_fd, as, strlen(as), 0);
+	epoll_ev->events = EPOLLIN;
+	epoll_ctl(this->epoll_fd, EPOLL_CTL_MOD, event_fd, epoll_ev);
 }
 
 void	Server::handle_epoll_events(int event_fd, epoll_event *epoll_ev)
@@ -102,7 +105,7 @@ void	Server::handle_epoll_events(int event_fd, epoll_event *epoll_ev)
 		else if (epoll_ev->events & EPOLLIN) //data came by registered connection 
 			init_request(event_fd, epoll_ev);
 		else if (epoll_ev->events & EPOLLOUT) //ready to response
-			init_response(event_fd);
+			init_response(event_fd, epoll_ev);
 	}
 	catch (std::exception())
 	{
@@ -137,21 +140,21 @@ int Server::init_server()
 	return 0;
 }
 
-void	Server::set_server_set(Socket s, Context c)
+void	Server::set_server_set(Socket s, Context *c)
 {
-	std::pair<Socket, Context> ret = std::make_pair(s, c);
+	std::pair<Socket, Context *> ret = std::make_pair(s, c);
 	this->server_set.push_back(ret);
 }
 
-int	main()
-{
-	Server server;
-	Socket s1, s2;
-	Context c1, c2;
+// int	main()
+// {
+// 	Server server;
+// 	Socket s1, s2;
+// 	Context c1, c2;
 
-	s1.init_socket("0.0.0.0", "8080"); // <- c2 = s1
-	s2.init_socket("0.0.0.0", "9090");
-	server.set_server_set(s1, c1);
-	server.set_server_set(s2, c2);
-	server.init_server();
-}
+// 	s1.init_socket("0.0.0.0", "8080"); // <- c2 = s1
+// 	s2.init_socket("0.0.0.0", "9090");
+// 	server.set_server_set(s1, c1);
+// 	server.set_server_set(s2, c2);
+// 	server.init_server();
+// }

@@ -1,13 +1,23 @@
-#include "http_response/response.cpp"
-#include "http_request/request.cpp"
+#include "http_response/response.hpp"
+#include "http_request/request.hpp"
+#include "config/config.hpp"
+#include "server_engine/server.hpp"
+#include "server_engine/socket.hpp"
 
 int main()
 {
-	Request request;
+	Context c;
+	std::vector<Context *> servers;
+	parse_config(c, "config/default_config");
+	get_servers(c, servers);
+//	print_servers(servers);
 
-	int status = parse_http_request(request, "GET / HTTP/1.\r\nHost: www.google.com\r\nConnection: close\r\n\r\n<html>\r\n\t<body></body>\r\n</html>\r\n");
-	std::cout << "status: " << status << std::endl;
-	http_response(request, status);
-	print_http_request(request);
-	return 0;
+	Socket s1,s2;
+	s1.init_socket(servers[0]->directive["host"][0] , servers[0]->directive["listen"][0]);
+	s2.init_socket(servers[1]->directive["host"][0], servers[1]->directive["listen"][0]);
+	Server s;
+	s.set_server_set(s1, servers[0]);
+	s.set_server_set(s2, servers[1]);
+	s.init_server();
+	return (0);
 }
