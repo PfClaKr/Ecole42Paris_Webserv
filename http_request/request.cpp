@@ -110,14 +110,15 @@ void print_http_request(Request &request)
 	std::cout << "=============================================\n";
 }
 
-int main()
-{
-	Request request;
+// int main()
+// {
+// 	Request request;
 
-	int status = parse_http_request(request, "GET / HTTP/1.\r\nHost: www.google.com\r\nConnection: close\r\n\r\n<html>\r\n\t<body></body>\r\n</html>\r\n");
-	std::cout << "status: " << status << std::endl;
-	if (status != 200)
-		return 1;
-	print_http_request(request);
-	return 0;
-}
+// 	int status = parse_http_request(request, "GET / HTTP/1.\r\nHost: www.google.com\r\nConnection: close\r\n\r\n<html>\r\n\t<body></body>\r\n</html>\r\n");
+// 	std::cout << "status: " << status << std::endl;
+// 	make_http_response(status);
+// 	if (status != 200)
+// 		return 1;
+// 	print_http_request(request);
+// 	return 0;
+// }

@@ -22,4 +22,6 @@ class Request
 		};
 };
 
+int parse_http_request(Request &request, std::string req);
+
 #endif

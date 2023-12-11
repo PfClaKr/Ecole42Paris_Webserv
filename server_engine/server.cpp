@@ -1,202 +1,157 @@
 #include "server.hpp"
 
-int	init_server(Socket &sock)
+void	add_fd_in_epoll(int epoll_fd, int fd, uint32_t opt)
 {
 	struct epoll_event epoll_ev;
-	int	epoll_fd = epoll_create(MAX_PORTS);
-	if (epoll_fd < 0)
+
+	epoll_ev.events = opt;
+	epoll_ev.data.fd = fd;
+	if (epoll_ctl(epoll_fd, EPOLL_CTL_ADD, fd, &epoll_ev))
 	{
-		perror("epoll"); //raise exception
-		return (false);
+		close(epoll_fd);
+		throw ("epoll_ctl");
 	}
-	for (size_t i = 0; i <= sock.quantity_listen; i++)
-	{
-		memset(&epoll_ev, 0, sizeof(epoll_ev));
-		epoll_ev.events = EPOLLIN;
-		epoll_ev.data.fd = sock.socketfd[i];
-		if (epoll_ctl(epoll_fd, EPOLL_CTL_ADD, sock.socketfd[i], &epoll_ev) < 0)
-		{
-			perror("epoll_ctl");
-			return (false);
-		}
-	}
-	//? have to see
-	memset(&epoll_ev, 0, sizeof(epoll_ev));
-	epoll_ev.events = EPOLLIN;
-	epoll_ev.data.fd = 0;
-	if (epoll_ctl(epoll_fd, EPOLL_CTL_ADD, 0, &epoll_ev) < 0)
-	{
-		perror("epoll_ctl 2");
-		return (false);
-	}
-	sock.epoll_fd = epoll_fd;
-	return (true);
 }
 
-int	init_sockets(Socket &sock, std::string ip[], std::string port[])
+int find_pair_by_key(std::vector<std::pair<Socket, Context>> &pair, int &key)
 {
-	int	socketfd;
-	int opt = 1;
-	int	file_flag;
-	struct sockaddr_in sa;
-
-	for (int i = 0; i <= sock.quantity_listen; i++)
+	for (int i = 0; i < pair.size(); i++)
 	{
-		socketfd = socket(AF_INET, SOCK_STREAM, 0);
-		if (socketfd < 0)
-		{
-			perror("socket");
-			return (false);
-		}
-		if (setsockopt(socketfd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)))
-		{
-			perror("setsocket");
-			return (false);
-		}
-		sa.sin_family = AF_INET;
-		sa.sin_addr.s_addr = inet_addr(ip[i].c_str());
-		sa.sin_port = htons(stoi(port[i]));
-		memset(sa.sin_zero, '\0', sizeof(sa.sin_zero));
-		if (bind(socketfd, (struct sockaddr *)&sa, sizeof(sa)) < 0)
-		{
-			perror("bind");
-			return (false);
-		}
-		file_flag = fcntl(socketfd, F_GETFL, 0);
-		if (file_flag < 0)
-		{
-			perror ("fcntl");
-			return (false);
-		}
-		if (fcntl(socketfd, F_SETFL, file_flag | O_NONBLOCK) < 0)
-		{
-			perror("fcntl 2");
-			return (false);
-		}
-		if (listen(socketfd, MAX_PORTS) < 0)
-		{
-			perror("listen");
-			return (false);
-		}
-		sock.socketfd.push_back(socketfd);
-	}
-	return (true);
-}
-
-int	init_accept(Socket sock, int i)
-{
-	struct epoll_event epoll_ev;
-	struct sockaddr in_addr;
-	socklen_t in_addr_len = sizeof(in_addr);
-	int	newfd;
-	int	file_flag;
-
-	newfd = accept(sock.socketfd[i], (struct sockaddr *)&in_addr, &in_addr_len);
-	if (newfd < 0)
-	{
-		perror("accept");
-		return (false);
-	}
-	file_flag = fcntl(newfd, F_GETFL, 0);
-	if (file_flag < 0)
-	{
-		perror("fcntl");
-		return (false);
-	}
-	if (fcntl(newfd, F_SETFL, file_flag | O_NONBLOCK) < 0)
-	{
-		perror("fcntl2");
-		return (false);
-	}
-	memset(&epoll_ev, 0, sizeof(epoll_ev));
-	epoll_ev.events = EPOLLIN;
-	epoll_ev.data.fd = 0;
-	std::cout << "Accept" << std::endl;
-	if (epoll_ctl(sock.epoll_fd, EPOLL_CTL_ADD, newfd, &epoll_ev) < 0)
-	{
-		perror("epoll_ctl");
-		return (false);
-	}
-	return (true);
-}
-
-int	socket_match(Socket sock, int event_fd)
-{
-	for (int i = 0; i <= sock.quantity_listen; i++)
-	{
-		if (event_fd == sock.socketfd[i])
+		if (pair[i].first.fd == key)
 			return (i);
 	}
 	return (-1);
 }
 
-int	listen_server(Socket sock)
+void	Server::init_epoll()
 {
-	struct epoll_event events[MAX_PORTS];
-	int	events_count;
-	int	j = 0;
+	this->epoll_fd = epoll_create1(EPOLL_CLOEXEC);
+	size_t size = this->server_set.size();
+	for (size_t i = 0; i < size; i++)
+		add_fd_in_epoll(this->epoll_fd, this->server_set[i].first.fd, EPOLLIN);
+}
 
-	std::cout << "wait the connection" << std::endl;
-	events_count = epoll_wait(sock.epoll_fd, events, MAX_PORTS, -1);
-	std::cout << "events_count :" << events_count << std::endl;
-	if (events_count < 0)
-	{
-		perror("epoll_wait");
-		return (false);
-	}
-	for (int i = 0; i < events_count; i++)
-	{
-		if (events[i].events & EPOLLERR || events[i].events & EPOLLHUP || (!(events[i].events & EPOLLIN)))
-		{
-			std::cerr << "epoll error" << std::endl;
-			close(events[i].data.fd);
-			return (true);
-		}
-		else if (socket_match(sock, events[i].data.fd) != -1)
-		{
-			if (init_accept(sock, i) == false)
-				return (false);
-		}
-		else
-		{
-			int str_len;
-			int client_fd = events[i].data.fd;
-			char data[4096];
-			str_len = read(client_fd, &data, sizeof(data));
+int	Server::accept_new_connection(int event_fd)
+{
+	struct epoll_event epoll_ev;
+	struct sockaddr_in addr;
+	socklen_t socklen = sizeof(addr);
 
-			if (str_len == 0)
-			{
-				std::cout << "Disconnect" << std::endl;
-				close(client_fd);
-				epoll_ctl(sock.epoll_fd, EPOLL_CTL_DEL, client_fd, NULL);
-			}
-			else
-				std::cout << "Recieved data :" << data << std::endl;
-		}
+	int	new_fd = accept(event_fd, (struct sockaddr *)&addr, &socklen);
+	if (new_fd < 0)
+		throw("accept");
+	if (fcntl(new_fd, F_SETFL, O_NONBLOCK) < 0)
+		throw("fcntl accept");
+	return (new_fd);
+}
+
+void	remove_fd_in_epoll(int epoll_fd, int fd, epoll_event *epoll_ev)
+{
+	epoll_ctl(epoll_fd, EPOLL_CTL_DEL, fd, epoll_ev);
+	close(fd);
+}
+
+std::string Server::recv_request(int fd)
+{
+	int	read_size = 0;
+	char buf[512];
+
+	memset(&buf, 0, sizeof(buf));
+	read_size = recv(fd, buf, sizeof(buf), MSG_DONTWAIT);
+
+	if (read_size == 0)
+		return (""); //connection closed client fd remove
+	else if (read_size == -1)
+		throw ("recv client error");
+	return (buf);
+}
+
+void	Server::init_request(int event_fd, epoll_event *epoll_ev)
+{
+	int	status;
+	Request request;
+	std::string data = recv_request(event_fd);
+
+	status = parse_http_request(request, data);
+	if (status)
+	{
+		epoll_ev->events = EPOLLOUT;
+		epoll_ctl(this->epoll_fd, EPOLL_CTL_MOD, event_fd, epoll_ev);
 	}
-	return (true);
+}
+
+void	Server::init_response(int event_fd)
+{
+	std::cout<<"hi"<<std::endl;
+}
+
+void	Server::handle_epoll_events(int event_fd, epoll_event *epoll_ev)
+{
+	int event;
+	event = find_pair_by_key(this->server_set, event_fd);
+	try
+	{
+		if (event >= 0) //new connection arrive
+		{
+			int accept_fd = this->accept_new_connection(event_fd);
+			add_fd_in_epoll(this->epoll_fd, accept_fd, EPOLLIN | EPOLLRDHUP);
+			request_set[accept_fd] = server_set[event];
+		}
+		else if (epoll_ev->events & EPOLLRDHUP) //connection closed or half-close
+			remove_fd_in_epoll(this->epoll_fd, event_fd, epoll_ev);
+		else if (epoll_ev->events & EPOLLIN) //data came by registered connection 
+			init_request(event_fd, epoll_ev);
+		else if (epoll_ev->events & EPOLLOUT) //ready to response
+			init_response(event_fd);
+	}
+	catch (std::exception())
+	{
+	}
+}
+
+void	Server::init_epoll_wait()
+{
+	this->is_up = true;
+	int ev_count;
+	struct epoll_event epoll_ev[MAX_EVENTS];
+
+	memset(&epoll_ev, 0, sizeof(epoll_ev));
+	while (is_up)
+	{
+		ev_count = epoll_wait(this->epoll_fd, epoll_ev, this->server_set.size(), -1);
+		for (int i = 0; i < ev_count && is_up; i++)
+			this->handle_epoll_events(epoll_ev[i].data.fd, &epoll_ev[i]);
+	}
+}
+
+int Server::init_server()
+{
+	try
+	{
+		this->init_epoll();
+		this->init_epoll_wait();
+	}
+	catch (std::exception())
+	{
+	}
+	return 0;
+}
+
+void	Server::set_server_set(Socket s, Context c)
+{
+	std::pair<Socket, Context> ret = std::make_pair(s, c);
+	this->server_set.push_back(ret);
 }
 
 int	main()
 {
-	Socket sock;
-	std::string count;
-	std::cout << "give me count of listen" << std::endl;
-	std::getline(std::cin, count);
-	sock.quantity_listen = stoi(count) - 1;
-	std::string port[sock.quantity_listen + 1];
-	std::string ip[sock.quantity_listen + 1];
-	for (int i = 0; i <= sock.quantity_listen ; i++)
-	{
-		std::cout << "give me ip adrr" << std::endl;
-		std::getline(std::cin, ip[i]);
-		std::cout << "give me port num" << std::endl;
-		std::getline(std::cin, port[i]);
-	}
-	init_sockets(sock, ip, port);
-	init_server(sock);
-	std::cout << "Server starting" << std::endl;
-	while (listen_server(sock) != false)
-		;
-	std::cout << "Server closed" << std::endl;
+	Server server;
+	Socket s1, s2;
+	Context c1, c2;
+
+	s1.init_socket("0.0.0.0", "8080"); // <- c2 = s1
+	s2.init_socket("0.0.0.0", "9090");
+	server.set_server_set(s1, c1);
+	server.set_server_set(s2, c2);
+	server.init_server();
 }
