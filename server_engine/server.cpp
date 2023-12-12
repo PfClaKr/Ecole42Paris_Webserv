@@ -9,7 +9,7 @@ void	add_fd_in_epoll(int epoll_fd, int fd, uint32_t opt)
 	if (epoll_ctl(epoll_fd, EPOLL_CTL_ADD, fd, &epoll_ev))
 	{
 		close(epoll_fd);
-		throw ("epoll_ctl");
+		throw (Server::epollException());
 	}
 }
 
@@ -17,7 +17,7 @@ int find_pair_by_key(std::vector<std::pair<Socket, Context *>> &pair, int &key)
 {
 	for (int i = 0; i < pair.size(); i++)
 	{
-		if (pair[i].first.fd == key)
+		if (pair[i].first.get_fd() == key)
 			return (i);
 	}
 	return (-1);
@@ -28,7 +28,7 @@ void	Server::init_epoll()
 	this->epoll_fd = epoll_create1(EPOLL_CLOEXEC);
 	size_t size = this->server_set.size();
 	for (size_t i = 0; i < size; i++)
-		add_fd_in_epoll(this->epoll_fd, this->server_set[i].first.fd, EPOLLIN);
+		add_fd_in_epoll(this->epoll_fd, this->server_set[i].first.get_fd(), EPOLLIN);
 }
 
 int	Server::accept_new_connection(int event_fd)
@@ -62,7 +62,7 @@ std::string Server::recv_request(int fd)
 	if (read_size == 0)
 		return (""); //connection closed client fd remove
 	else if (read_size == -1)
-		throw ("recv client error");
+		throw (Socket::SocketException());
 	return (buf);
 }
 
@@ -73,19 +73,50 @@ void	Server::init_request(int event_fd, epoll_event *epoll_ev)
 	std::string data = recv_request(event_fd);
 
 	status = parse_http_request(request, data);
-	if (status)
+	if (status == 200)
 	{
+		response_set = std::make_pair(request, request_set[event_fd]);
 		epoll_ev->events = EPOLLOUT;
 		epoll_ctl(this->epoll_fd, EPOLL_CTL_MOD, event_fd, epoll_ev);
 	}
 }
 
+void	Server::send_response(Response &response, int fd)
+{
+
+	// int	send_size;
+	// send_size = send(fd, response.response, response.response.size(), 0);
+	// if (send_size <= 0)
+	// 	throw (Socket::SocketException());
+}
+
+int	Server::is_keep_alive()
+{
+	std::string config = this->response_set.first.header["Connection"];
+	if (config == "keep alive")
+		return (true);
+	return (false);
+}
+
 void	Server::init_response(int event_fd, epoll_event *epoll_ev)
 {
-	char as[] = "HTTP/1.1 200 OK";
-	int	send_size = send(event_fd, as, strlen(as), 0);
-	epoll_ev->events = EPOLLIN;
-	epoll_ctl(this->epoll_fd, EPOLL_CTL_MOD, event_fd, epoll_ev);
+	Response response;
+	try
+	{
+		response.make_http_response(response, response_set);
+	}
+	catch (std::exception &e)
+	{
+	}
+	send_response(response, event_fd);
+	if (!is_keep_alive())
+		remove_fd_in_epoll(this->epoll_fd, event_fd, epoll_ev);
+	else
+	{
+		response_set.first.clear_value();
+		epoll_ev->events = EPOLLIN;
+		epoll_ctl(this->epoll_fd, EPOLL_CTL_MOD, event_fd, epoll_ev);
+	}
 }
 
 void	Server::handle_epoll_events(int event_fd, epoll_event *epoll_ev)
@@ -98,7 +129,7 @@ void	Server::handle_epoll_events(int event_fd, epoll_event *epoll_ev)
 		{
 			int accept_fd = this->accept_new_connection(event_fd);
 			add_fd_in_epoll(this->epoll_fd, accept_fd, EPOLLIN | EPOLLRDHUP);
-			request_set[accept_fd] = server_set[event];
+			request_set[accept_fd] = server_set[event].second;
 		}
 		else if (epoll_ev->events & EPOLLRDHUP) //connection closed or half-close
 			remove_fd_in_epoll(this->epoll_fd, event_fd, epoll_ev);
@@ -107,8 +138,10 @@ void	Server::handle_epoll_events(int event_fd, epoll_event *epoll_ev)
 		else if (epoll_ev->events & EPOLLOUT) //ready to response
 			init_response(event_fd, epoll_ev);
 	}
-	catch (std::exception())
+	catch (Socket::SocketException &e)
 	{
+		std::cerr << e.what() << std::endl;
+		remove_fd_in_epoll(this->epoll_fd, event_fd, epoll_ev);
 	}
 }
 

@@ -20,6 +20,7 @@ class Request
 			this->startline["http_version"] = "";
 			this->body = "";
 		};
+		void	clear_value();
 };
 
 int parse_http_request(Request &request, std::string req);

@@ -16,21 +16,28 @@
 
 class Socket
 {
+	private:
+		int	fd;
+		struct sockaddr_in addr;
+		socklen_t socklen;
+		void init_socket_address(std::string host, std::string port);
+		void init_socket_option();
+		void init_socket_bind();
+		void init_socket_fd_nonblocking();
 	public:
 		Socket(void){ 
 			fd = socket(AF_INET, SOCK_STREAM, 0);
 			socklen = sizeof(addr);
 		}
-
-		int	fd;
-		struct sockaddr_in addr;
-		socklen_t socklen;
-
 		void init_socket(std::string host, std::string port);
-		void init_socket_address(std::string host, std::string port);
-		void init_socket_option();
-		void init_socket_bind();
-		void init_socket_fd_nonblocking();
+
+		int	get_fd();
+
+		class SocketException : public std::exception
+		{
+			public:
+				const char *what(void) const throw();
+		};
 };
 
 #endif

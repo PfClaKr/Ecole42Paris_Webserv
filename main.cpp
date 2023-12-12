@@ -14,8 +14,16 @@ int main()
 //	print_servers(servers);
 
 	Socket s1,s2;
-	s1.init_socket(servers[0]->get_directive_by_key("host")[0], servers[0]->get_directive_by_key("listen")[0]);
-	s2.init_socket(servers[1]->get_directive_by_key("host")[0], servers[1]->get_directive_by_key("listen")[0]);
+	try
+	{
+		s1.init_socket(servers[0]->get_directive_by_key("host")[0], servers[0]->get_directive_by_key("listen")[0]);
+		s2.init_socket(servers[1]->get_directive_by_key("host")[0], servers[1]->get_directive_by_key("listen")[0]);
+	}
+	catch (Socket::SocketException &e)
+	{
+		std::cerr << e.what() << std::endl;
+		return (-1);
+	}
 	Server s;
 	s.set_server_set(s1, servers[0]);
 	s.set_server_set(s2, servers[1]);

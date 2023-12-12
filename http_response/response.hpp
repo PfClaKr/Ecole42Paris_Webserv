@@ -5,18 +5,12 @@
 # include <string>
 # include <map>
 # include "../http_request/request.hpp"
+# include "../config/context.hpp"
 
 class Response 
 {
-	private:
-		std::string method;
-		std::string uri;
-		std::string body;
-		std::map<std::string, std::string> header;
-		int	error_code;
 	public:
-		int	init_http_response(Request &request, int status);
-		void	make_http_response(void);
+		void make_http_response(Response &response, std::pair<Request, Context *> &config);
 };
 
 #endif

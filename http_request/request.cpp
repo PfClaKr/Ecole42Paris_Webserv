@@ -110,6 +110,12 @@ void print_http_request(Request &request)
 	std::cout << "=============================================\n";
 }
 
+void	Request::clear_value()
+{
+	this->startline.clear();
+	this->header.clear();
+	this->body = "";
+}
 // int main()
 // {
 // 	Request request;
