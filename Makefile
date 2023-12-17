@@ -1,6 +1,6 @@
 NAME = webserv
 
-VPATH = http_request/ http_response/ server_engine/ config/
+VPATH = src/http_request/ src/http_response/ src/server_engine/ src/config/
 
 SRCS =	main.cpp \
 		request.cpp \

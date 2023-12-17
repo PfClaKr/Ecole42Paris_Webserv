@@ -26,6 +26,7 @@ int main()
 		return (-1);
 	}
 	Server s;
+	//check multiple port
 	s.set_server_set(s1, servers[0]);
 	s.set_server_set(s2, servers[1]);
 	s.init_server();

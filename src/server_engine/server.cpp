@@ -68,6 +68,7 @@ std::string Server::recv_request(int fd)
 
 void	Server::process_split_request(int event_fd, epoll_event *epoll_ev)
 {
+	//have to timeout?
 	std::string data = recv_request(event_fd);
 	this->response_set.first.body += data;
 	this->check_split_request();
@@ -94,7 +95,8 @@ void	Server::init_request(int event_fd, epoll_event *epoll_ev)
 	Request request;
 	std::string data = recv_request(event_fd);
 
-	parse_http_request(request, data);
+	if (parse_http_request(request, data) == 400);
+		throw (Response::responseException());
 	this->response_set = std::make_pair(request, this->request_set[event_fd]);
 	this->check_split_request();
 	if (!this->split_request)
@@ -106,7 +108,6 @@ void	Server::init_request(int event_fd, epoll_event *epoll_ev)
 
 void	Server::send_response(Response &response, int fd)
 {
-
 	// int	send_size;
 	// send_size = send(fd, response.response, response.response.size(), 0);
 	// if (send_size <= 0)
@@ -124,13 +125,8 @@ int	Server::is_keep_alive()
 void	Server::init_response(int event_fd, epoll_event *epoll_ev)
 {
 	Response response;
-	try
-	{
-		response.make_http_response(response, response_set);
-	}
-	catch (std::exception &e)
-	{
-	}
+
+	response.make_http_response(response, response_set);
 	send_response(response, event_fd);
 	if (!is_keep_alive())
 		remove_fd_in_epoll(this->epoll_fd, event_fd, epoll_ev);
@@ -164,6 +160,12 @@ void	Server::handle_epoll_events(int event_fd, epoll_event *epoll_ev)
 	catch (Socket::SocketException &e)
 	{
 		std::cerr << e.what() << std::endl;
+		remove_fd_in_epoll(this->epoll_fd, event_fd, epoll_ev);
+	}
+	catch (Response::responseException &e)
+	{
+		Response response;
+		send_response(response, event_fd);
 		remove_fd_in_epoll(this->epoll_fd, event_fd, epoll_ev);
 	}
 }
