@@ -9,7 +9,8 @@ int main()
 {
 	Context c;
 	std::vector<Context *> servers;
-	parse_config(c, "config/default_config");
+//	parse_config(c, "config/default_config");
+	parse_config(c, "config/default.conf");
 	get_servers(c, servers);
 //	print_servers(servers);
 

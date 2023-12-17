@@ -9,6 +9,7 @@
 class Server
 {
 	private:
+		bool	split_request;
 		int epoll_fd;
 		std::vector<std::pair<Socket, Context *>> server_set;
 		std::map<int, Context *> request_set;
@@ -18,6 +19,8 @@ class Server
 		void	init_epoll_wait();
 		void	handle_epoll_events(int fd, epoll_event *epoll_ev);
 		void	init_request(int event_fd, epoll_event *epoll_ev);
+		void	check_split_request();
+		void	process_split_request(int event_fd, epoll_event *epoll_ev);
 		void	init_response(int event_fd, epoll_event *epoll_ev);
 		int		is_keep_alive();
 		std::string recv_request(int fd);
@@ -26,14 +29,18 @@ class Server
 		int	is_up;
 		void set_server_set(Socket s, Context *c);
 		int		init_server();
+
+
 		int		get_epoll_fd();
 		std::vector<std::pair<Socket, Context *>> get_server_set();
 		std::map<int, std::pair<Socket, Context *>> get_request_set();
 
 		class epollException : public std::exception
 		{
-			public:
-				const char *what(void) const throw();
+			virtual const char* what() const throw()
+			{
+				return "Epoll Error";
+			}
 		};
 };
 

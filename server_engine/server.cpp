@@ -66,16 +66,39 @@ std::string Server::recv_request(int fd)
 	return (buf);
 }
 
+void	Server::process_split_request(int event_fd, epoll_event *epoll_ev)
+{
+	std::string data = recv_request(event_fd);
+	this->response_set.first.body += data;
+	this->check_split_request();
+	if (!this->split_request)
+	{
+		epoll_ev->events = EPOLLOUT;
+		epoll_ctl(this->epoll_fd, EPOLL_CTL_MOD, event_fd, epoll_ev);
+	}
+}
+
+void	Server::check_split_request()
+{
+	Request request = this->response_set.first;
+	int	content_length = std::atoi(request.header["Content_length"].c_str());
+	if (request.body.size() < content_length)
+		this->split_request = true;
+	this->split_request = false;
+}
+
 void	Server::init_request(int event_fd, epoll_event *epoll_ev)
 {
-	int	status;
+	if (this->split_request)
+		return (process_split_request(event_fd, epoll_ev));
 	Request request;
 	std::string data = recv_request(event_fd);
 
-	status = parse_http_request(request, data);
-	if (status == 200)
+	parse_http_request(request, data);
+	this->response_set = std::make_pair(request, this->request_set[event_fd]);
+	this->check_split_request();
+	if (!this->split_request)
 	{
-		response_set = std::make_pair(request, request_set[event_fd]);
 		epoll_ev->events = EPOLLOUT;
 		epoll_ctl(this->epoll_fd, EPOLL_CTL_MOD, event_fd, epoll_ev);
 	}
@@ -133,7 +156,7 @@ void	Server::handle_epoll_events(int event_fd, epoll_event *epoll_ev)
 		}
 		else if (epoll_ev->events & EPOLLRDHUP) //connection closed or half-close
 			remove_fd_in_epoll(this->epoll_fd, event_fd, epoll_ev);
-		else if (epoll_ev->events & EPOLLIN) //data came by registered connection 
+		else if (epoll_ev->events & EPOLLIN) //data came by registered connection
 			init_request(event_fd, epoll_ev);
 		else if (epoll_ev->events & EPOLLOUT) //ready to response
 			init_response(event_fd, epoll_ev);
