@@ -11,6 +11,11 @@ void	Context::add_directive(const std::string k, const std::vector<std::string> 
         this->directive[k] = v;
 }
 
+void	Context::set_parent(Context *parent)
+{
+        this->parent = parent;
+}
+
 void	Context::add_child(Context *child)
 {
         this->child.push_back(child);
@@ -35,6 +40,11 @@ const std::map<std::string, std::vector<std::string> > &Context::get_directive(v
 const std::vector<std::string> &Context::get_directive_by_key(std::string k) const
 {
         return this->directive.at(k); // exception throws if cannot find key
+}
+
+const Context *Context::get_parent(void) const
+{
+        return this->parent;
 }
 
 const std::vector<Context *> &Context::get_child(void) const

@@ -13,6 +13,7 @@ class Context
 	std::string name;
 	std::vector<std::string> args;
 	std::map<std::string, std::vector<std::string> > directive;
+	const Context *parent;
 	std::vector<Context *> child;
 
         Context(Context &src)
@@ -28,25 +29,22 @@ class Context
 public:
 	void	set_args(const std::vector<std::string> args);
 	void	add_directive(const std::string k, const std::vector<std::string> v);
+	void	set_parent(Context *parent);
 	void	add_child(Context *child);
 
 	const std::string					&get_name(void) const;
 	const std::vector<std::string>				&get_args(void) const;
 	const std::map<std::string, std::vector<std::string> >	&get_directive(void) const;
 	const std::vector<std::string>				&get_directive_by_key(std::string k) const;
+	const Context						*get_parent(void) const;
 	const std::vector<Context *>				&get_child(void) const;
 
 	Context(){
 		this->name = "main";
+		this->parent = NULL;
 	};
 	Context(std::string name){
 		this->name = name;
-		// if need to set default value:
-		if (this->name.compare("server") == 0)
-		{
-			this->directive["host"].push_back("0.0.0.0");
-			this->directive["listen"].push_back("80");
-		}
 	};
 	~Context(){
 		for (unsigned long i = 0; i < child.size(); i++)

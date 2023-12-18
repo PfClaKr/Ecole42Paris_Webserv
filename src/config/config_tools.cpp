@@ -22,6 +22,10 @@ static void print_context(const Context &c, const int indent = 0)
 	for (unsigned long i = 0; i < c.get_child().size(); i++)
 	{
 		sp(indent);
+		if (c.get_parent() == NULL)
+			std::cout << "main.";
+		else
+			std::cout << (c.get_child()[i]->get_parent()->get_name()) << ".";
 		std::cout << (*c.get_child()[i]).get_name();
 		for (unsigned long j = 0; j < (*c.get_child()[i]).get_args().size(); j++)
 			std::cout << " " << (*c.get_child()[i]).get_args()[j];

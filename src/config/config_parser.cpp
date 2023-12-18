@@ -70,19 +70,20 @@ static void preprocess(std::string &str)
 	str.erase(str.find_last_not_of(" \t\v\r") + 1);
 }
 
-// static int check_directive(const std::string &k, const std::vector<std::string> &v)
-// {
-// 	if (k.compare("autoindex") == 0)
-// 	{
-// 		if (v.size() != 1 || v[0].compare("on") != 0 || v[0].compare("off") != 0)
-// 			return -1;
-// 	}
-// 	else if (k.compare("allow_methods") == 0)
-// 	{
-// 		if (v.size() > 3 || std::find(v.begin(), v.end(), "GET") != v.end())
-// 	}
-// 	return 0;
-// }
+static int check_directive(const std::string &k, const std::vector<std::string> &v)
+{
+	// if (k.compare("autoindex") == 0)
+	// {
+	// 	if (v.size() != 1 || v[0].compare("on") != 0 || v[0].compare("off") != 0)
+	// 		return -1;
+	// }
+	// else if (k.compare("allow_methods") == 0)
+	// {
+	// 	if (v.size() > 3)
+	// 		return -1;
+	// }
+	return 0;
+}
 
 static int parse_context_directives(Context &config, std::string &str)
 {
@@ -97,8 +98,8 @@ static int parse_context_directives(Context &config, std::string &str)
 	std::vector<std::string> v(begin, end);
 	std::string k = v[0];
 	v.erase(v.begin());
-	// if (check_directive(k, v) == -1)
-	// 	return -1;
+	if (check_directive(k, v) == -1)
+		return -1;
 	config.add_directive(k, v);
 	return 0;
 }
@@ -124,6 +125,7 @@ static int parse_context(Context &config, std::fstream &config_file, int &contex
 		{
 			context_level++;
 			config.add_child(new Context(context_name(str)));
+			config.get_child().back()->set_parent(&config);
 			std::stringstream ss(str);
 			std::istream_iterator<std::string> begin(ss);
 			std::istream_iterator<std::string> end;
@@ -168,7 +170,7 @@ int main()
 		std::cout << "\nerror\n";
 		return 0;
 	}
-	// print_config(config);
+	print_config(config);
 	// try
 	// {
 	// 	config.get_directive_by_key("test");
@@ -177,11 +179,12 @@ int main()
 	// {
 	// 	std::cerr << "exception raised on " << e.what() << "\n";
 	// }
-	std::vector<Context *> servers;
-	std::vector<Context *> http;
-	servers = get_context_by_name(config, "server");
-	http = get_context_by_name(config, "http");
-	print_contexts(servers);
-	print_contexts(http);
+
+	// std::vector<Context *> servers;
+	// std::vector<Context *> http;
+	// servers = get_context_by_name(config, "server");
+	// http = get_context_by_name(config, "http");
+	// print_contexts(servers);
+	// print_contexts(http);
 	return 0;
 }
