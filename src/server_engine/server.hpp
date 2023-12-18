@@ -37,10 +37,19 @@ class Server
 
 		class epollException : public std::exception
 		{
+		public:
 			virtual const char* what() const throw()
 			{
 				return "Epoll Error";
 			}
+		};
+		class parsingException : public std::exception
+		{
+		public:
+			virtual const char* what() const throw()
+			{
+				return "Parsing Error Exception";
+			};
 		};
 };
 

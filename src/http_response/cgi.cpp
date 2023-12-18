@@ -55,11 +55,11 @@ void	Cgi::run_cgi(Request &request, Context *context, std::string file)
 	int cp_stdin = dup(STDIN_FILENO);
 
 	if (!pipe(fd))
-		throw CgiException();
+		throw Cgi::CgiException();
 	if (!write(fd_in, request.body.c_str(), request.body.size()))
-		throw CgiException();
+		throw Cgi::CgiException();
 	if (!lseek(fd_in, 0, SEEK_SET))
-		throw CgiException();
+		throw Cgi::CgiException();
 	
 
 	int pid = fork();
@@ -87,7 +87,7 @@ void	Cgi::run_cgi(Request &request, Context *context, std::string file)
 	{
 		waitpid(pid, NULL, -1);
 		if (!close(fd[1]))
-			throw CgiException();
+			throw Cgi::CgiException();
 		memset(ret, 0, sizeof(ret));
 		this->output.clear();
 		while (read(fd[0], ret, sizeof(ret)) > 0)
@@ -96,7 +96,7 @@ void	Cgi::run_cgi(Request &request, Context *context, std::string file)
 			memset(ret, 0, sizeof(ret));
 		}
 		if (!close(fd[0]))
-			throw CgiException();
+			throw Cgi::CgiException();
 		dup2(STDIN_FILENO, cp_stdin);
 		fclose(file_in);
 		close(fd_in);
@@ -120,7 +120,7 @@ void	Cgi::set_cgi_path(std::string file, Context *context)
 			return ;
 		}
 	}
-	throw CgiException();
+	throw Cgi::CgiException();
 }
 
 std::string	Cgi::set_output_in_response_body(Response *response)

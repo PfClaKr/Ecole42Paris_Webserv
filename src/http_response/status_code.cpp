@@ -1,6 +1,6 @@
 #include "status_code.hpp"
 
-std::string Response::get_statusline(int status)
+std::string Response::get_status_line(int status)
 {
     switch (status)
     {

@@ -95,10 +95,10 @@ void	Server::init_request(int event_fd, epoll_event *epoll_ev)
 	Request request;
 	std::string data = recv_request(event_fd);
 
-	if (parse_http_request(request, data) == 400);
+	if (parse_http_request(request, data) == 400)
 	{
 		this->response_set = std::make_pair(request, this->request_set[event_fd]);
-		throw (Request::parsingException());
+		throw (Server::parsingException());
 	}
 	this->response_set = std::make_pair(request, this->request_set[event_fd]);
 	this->check_split_request();

@@ -368,6 +368,8 @@ void	Response::set_default_error_page(Context *context)
 		if (tmp.first.find("default_error_page") != std::string::npos)
 		{
 			int pos = tmp.first.find_first_not_of("default_error_page");
+			if (pos == std::string::npos)
+				Response::parsingException();
 			std::string new_tmp = tmp.first.substr(pos, tmp.first.size());
 			this->default_error_page[std::atoi(new_tmp.c_str())] = tmp.second.front();
 		}

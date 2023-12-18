@@ -6,6 +6,8 @@
 #include "mime.hpp"
 #include "../http_request/request.hpp"
 
+class Response;
+
 class Cgi
 {
 	private:
@@ -45,10 +47,14 @@ class Cgi
 		std::string set_output_in_response_body(Response *response);
 	public:
 		std::string init_cgi(Request &request, Context *context, Response *response);
+
 		class CgiException : public std::exception
 		{
-			public:
-				const char *what() const throw();
+		public:
+			virtual const char *what() const throw()
+			{
+				return "Cgi Exception";
+			};
 		};
 };
 

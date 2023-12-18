@@ -11,7 +11,7 @@ int main()
 	std::vector<Context *> servers;
 //	parse_config(c, "config/default_config");
 	parse_config(c, "config/default.conf");
-	get_servers(c, servers);
+	get_context_by_name(c, "servers");
 //	print_servers(servers);
 
 	Socket s1,s2;

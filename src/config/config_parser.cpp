@@ -72,16 +72,19 @@ static void preprocess(std::string &str)
 
 static int check_directive(const std::string &k, const std::vector<std::string> &v)
 {
-	// if (k.compare("autoindex") == 0)
-	// {
-	// 	if (v.size() != 1 || v[0].compare("on") != 0 || v[0].compare("off") != 0)
-	// 		return -1;
-	// }
-	// else if (k.compare("allow_methods") == 0)
-	// {
-	// 	if (v.size() > 3)
-	// 		return -1;
-	// }
+	if (k.compare("autoindex") == 0)
+	{
+		if (v.size() != 1 || v[0].compare("on") != 0 || v[0].compare("off") != 0)
+			return -1;
+	}
+	else if (k.compare("allow_methods") == 0)
+	{
+		for (int i = 0; i < v.size(); i++)
+		{
+			if (v[i].compare("GET") != 0 || v[i].compare("POST") != 0 || v[i].compare("DELETE") != 0)
+				return -1;
+		}
+	}
 	return 0;
 }
 
@@ -159,32 +162,32 @@ int parse_config(Context &config, const std::string &filename)
 	return 0;
 }
 
-#include "config_tools.hpp"
+// #include "config_tools.hpp"
 
-int main()
-{
-	Context config;
-	std::cout << "parse config: \n\n";
-	if (parse_config(config, "default.conf") == -1)
-	{
-		std::cout << "\nerror\n";
-		return 0;
-	}
-	print_config(config);
-	// try
-	// {
-	// 	config.get_directive_by_key("test");
-	// }
-	// catch (std::exception &e)
-	// {
-	// 	std::cerr << "exception raised on " << e.what() << "\n";
-	// }
+// int main()
+// {
+// 	Context config;
+// 	std::cout << "parse config: \n\n";
+// 	if (parse_config(config, "default.conf") == -1)
+// 	{
+// 		std::cout << "\nerror\n";
+// 		return 0;
+// 	}
+// 	print_config(config);
+// 	// try
+// 	// {
+// 	// 	config.get_directive_by_key("test");
+// 	// }
+// 	// catch (std::exception &e)
+// 	// {
+// 	// 	std::cerr << "exception raised on " << e.what() << "\n";
+// 	// }
 
-	// std::vector<Context *> servers;
-	// std::vector<Context *> http;
-	// servers = get_context_by_name(config, "server");
-	// http = get_context_by_name(config, "http");
-	// print_contexts(servers);
-	// print_contexts(http);
-	return 0;
-}
+// 	// std::vector<Context *> servers;
+// 	// std::vector<Context *> http;
+// 	// servers = get_context_by_name(config, "server");
+// 	// http = get_context_by_name(config, "http");
+// 	// print_contexts(servers);
+// 	// print_contexts(http);
+// 	return 0;
+// }

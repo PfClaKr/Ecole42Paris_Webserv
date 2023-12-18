@@ -45,6 +45,15 @@ class Response
 		std::string get_path();
 		std::string get_query();
 		std::string get_status_line(int status);
+
+		class parsingException : public std::exception
+		{
+			public:
+				const char *what() const throw()
+				{
+					return "Parsing Error Exception";
+				};
+		};
 };
 
 #endif

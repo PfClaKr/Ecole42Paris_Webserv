@@ -73,3 +73,23 @@ void print_contexts(const std::vector<Context *> &v)
 		std::cout << "\n";
 	}
 }
+
+int config_integrity_check(const Context &config)
+{
+	for (int i = 0; i < config.get_child().size(); i++)
+	{
+		if (config.get_name().compare("http") == 0)
+		{
+			
+		}
+		else if (config.get_name().compare("server") == 0)
+		{
+
+		}
+		else if (config.get_name().compare("location") == 0)
+		{
+
+		}
+	}
+	return 0;
+}
