@@ -12,6 +12,10 @@ int main()
 	std::vector<Context *> servers = get_context_by_name(c, "server");
 //	print_servers(servers);
 
+	#ifdef DEBUG
+		std::cout << DARK_BLUE << "-------------DEBUG MODE-------------" << RESET << std::endl;
+	#endif
+
 	Socket s1,s2;
 	try
 	{

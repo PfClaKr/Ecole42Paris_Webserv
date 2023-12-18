@@ -11,6 +11,7 @@
 #include <unistd.h>
 #include <fcntl.h>
 #include <vector>
+#include "../config/colors.hpp"
 #define MAX_EVENTS 512
 
 

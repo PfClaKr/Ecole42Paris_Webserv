@@ -2,6 +2,7 @@
 # define SERVER_HPP
 
 #include "socket.hpp"
+#include "../config/colors.hpp"
 #include "../config/context.hpp"
 #include "../http_request/request.hpp"
 #include "../http_response/response.hpp"
@@ -26,6 +27,7 @@ class Server
 		std::string recv_request(int fd);
 		void	send_response(Response &response, int fd);
 	public:
+		Server();
 		int	is_up;
 		void set_server_set(Socket s, Context *c);
 		int		init_server();

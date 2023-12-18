@@ -98,7 +98,7 @@ int parse_http_request(Request &request, std::string req)
 
 void print_http_request(Request &request)
 {
-	std::cout << "=============================================\n";
+	std::cout << "==============Request parsing=================\n";
 	std::cout << "Method : " << request.startline["method"] << std::endl;
 	std::cout << "Uri    : " << request.startline["uri"] << std::endl;
 	std::cout << "Version: " << request.startline["http_version"] << std::endl;

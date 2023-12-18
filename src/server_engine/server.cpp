@@ -29,6 +29,9 @@ void	Server::init_epoll()
 	size_t size = this->server_set.size();
 	for (size_t i = 0; i < size; i++)
 		add_fd_in_epoll(this->epoll_fd, this->server_set[i].first.get_fd(), EPOLLIN);
+	#ifdef DEBUG
+		std::cout << DARK_BLUE << "Number of servers: " << this->server_set.size() << RESET << std::endl;
+	#endif
 }
 
 int	Server::accept_new_connection(int event_fd)
@@ -38,6 +41,12 @@ int	Server::accept_new_connection(int event_fd)
 	socklen_t socklen = sizeof(addr);
 
 	int	new_fd = accept(event_fd, (struct sockaddr *)&addr, &socklen);
+
+	std::cout << CYAN << "New connections arrived !" << RESET << std::endl;
+	#ifdef DEBUG
+		std::cout << DARK_BLUE << "in accept fd: " << new_fd << RESET << std::endl;
+	#endif
+
 	if (new_fd < 0)
 		throw("accept");
 	if (fcntl(new_fd, F_SETFL, O_NONBLOCK) < 0)
@@ -47,6 +56,10 @@ int	Server::accept_new_connection(int event_fd)
 
 void	remove_fd_in_epoll(int epoll_fd, int fd, epoll_event *epoll_ev)
 {
+	std::cout << "Connection closed..." << std::endl;
+	#ifdef DEBUG
+		std::cout << DARK_BLUE << "closed fd: " << fd << RESET << std::endl;
+	#endif
 	epoll_ctl(epoll_fd, EPOLL_CTL_DEL, fd, epoll_ev);
 	close(fd);
 }
@@ -54,10 +67,16 @@ void	remove_fd_in_epoll(int epoll_fd, int fd, epoll_event *epoll_ev)
 std::string Server::recv_request(int fd)
 {
 	int	read_size = 0;
-	char buf[512];
+	char buf[2048];
 
 	memset(&buf, 0, sizeof(buf));
 	read_size = recv(fd, buf, sizeof(buf), MSG_DONTWAIT);
+
+	#ifdef DEBUG
+		std::cout << DARK_BLUE << "request fd: " << fd << RESET << std::endl;
+	#endif
+	std::cout << "Request :" << std::endl;
+	std::cout << YELLOW << buf << RESET << std::endl;
 
 	if (read_size == 0)
 		return (""); //connection closed client fd remove
@@ -84,7 +103,10 @@ void	Server::check_split_request()
 	Request request = this->response_set.first;
 	int	content_length = std::atoi(request.header["Content_length"].c_str());
 	if (request.body.size() < (unsigned long) content_length)
+	{
 		this->split_request = true;
+		return ;
+	}
 	this->split_request = false;
 }
 
@@ -97,11 +119,20 @@ void	Server::init_request(int event_fd, epoll_event *epoll_ev)
 
 	if (parse_http_request(request, data) == 400)
 	{
+		#ifdef DEBUG
+			print_http_request(request);
+		#endif
 		this->response_set = std::make_pair(request, this->request_set[event_fd]);
-		throw (Server::parsingException());
+		throw (Request::parsingException());
 	}
 	this->response_set = std::make_pair(request, this->request_set[event_fd]);
 	this->check_split_request();
+	#ifdef DEBUG
+		print_http_request(request);
+		std::cout << DARK_BLUE << "is_split request " << event_fd << "? : ";
+		this->split_request == true ? std::cout << "yes" : std::cout << "no";
+		std::cout << RESET << std::endl;
+	#endif
 	if (!this->split_request)
 	{
 		epoll_ev->events = EPOLLOUT;
@@ -113,6 +144,13 @@ void	Server::send_response(Response &response, int fd)
 {
 	int	send_size;
 	send_size = send(fd, response.get_ready_to_send().c_str(), response.get_ready_to_send().size(), 0);
+
+	#ifdef DEBUG
+		std::cout << DARK_BLUE << "response fd: " << fd << RESET << std::endl;
+	#endif
+	std::cout << "Response :" << std::endl;
+	std::cout << GREEN << response.get_ready_to_send() << RESET << std::endl;
+
 	if (send_size <= 0)
 		throw (Socket::SocketException());
 }
@@ -149,7 +187,6 @@ void	Server::handle_epoll_events(int event_fd, epoll_event *epoll_ev)
 	{
 		if (event >= 0) //new connection arrive
 		{
-			std::cout << "new connection arrived !" << std::endl;
 			int accept_fd = this->accept_new_connection(event_fd);
 			add_fd_in_epoll(this->epoll_fd, accept_fd, EPOLLIN | EPOLLRDHUP);
 			request_set[accept_fd] = server_set[event].second;
@@ -192,6 +229,9 @@ void	Server::init_epoll_wait()
 
 int Server::init_server()
 {
+	#ifdef DEBUG
+		std::cout << DARK_BLUE << "----------init-server----------" << std::endl;
+	#endif
 	try
 	{
 		this->init_epoll();
@@ -199,6 +239,7 @@ int Server::init_server()
 	}
 	catch (std::exception())
 	{
+		return -1;
 	}
 	return 0;
 }
@@ -207,6 +248,12 @@ void	Server::set_server_set(Socket s, Context *c)
 {
 	std::pair<Socket, Context *> ret = std::make_pair(s, c);
 	this->server_set.push_back(ret);
+}
+
+Server::Server()
+{
+	this->split_request = false;
+	this->epoll_fd = -1;
 }
 
 // int	main()
