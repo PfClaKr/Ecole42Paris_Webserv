@@ -10,6 +10,11 @@ std::string Response::get_path()
 	return (this->path);
 }
 
+std::string Response::get_ready_to_send()
+{
+	return (this->ready_to_send);
+}
+
 int	Response::check_host_in_header(Request &request)
 {
 	std::string host = request.header["Host"];

@@ -45,6 +45,7 @@ class Response
 		std::string get_path();
 		std::string get_query();
 		std::string get_status_line(int status);
+		std::string get_ready_to_send();
 
 		class parsingException : public std::exception
 		{

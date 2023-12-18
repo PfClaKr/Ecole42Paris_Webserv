@@ -37,6 +37,7 @@ void	Socket::init_socket(std::string host, std::string port)
 	this->init_socket_bind();
 	this->init_socket_fd_nonblocking();
 
+	std::cout << "socket fd: " << fd << std::endl;
 	if (listen(this->fd, MAX_EVENTS) < 0)
 		throw(Socket::SocketException());
 }

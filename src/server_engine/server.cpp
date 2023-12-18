@@ -111,12 +111,10 @@ void	Server::init_request(int event_fd, epoll_event *epoll_ev)
 
 void	Server::send_response(Response &response, int fd)
 {
-	(void) response;
-	(void) fd;
-	// int	send_size;
-	// send_size = send(fd, response.response, response.response.size(), 0);
-	// if (send_size <= 0)
-	// 	throw (Socket::SocketException());
+	int	send_size;
+	send_size = send(fd, response.get_ready_to_send().c_str(), response.get_ready_to_send().size(), 0);
+	if (send_size <= 0)
+		throw (Socket::SocketException());
 }
 
 int	Server::is_keep_alive()
@@ -151,6 +149,7 @@ void	Server::handle_epoll_events(int event_fd, epoll_event *epoll_ev)
 	{
 		if (event >= 0) //new connection arrive
 		{
+			std::cout << "new connection arrived !" << std::endl;
 			int accept_fd = this->accept_new_connection(event_fd);
 			add_fd_in_epoll(this->epoll_fd, accept_fd, EPOLLIN | EPOLLRDHUP);
 			request_set[accept_fd] = server_set[event].second;

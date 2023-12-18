@@ -8,17 +8,17 @@
 int main()
 {
 	Context c;
-	std::vector<Context *> servers;
-//	parse_config(c, "config/default_config");
-	parse_config(c, "config/default.conf");
-	get_context_by_name(c, "servers");
+	parse_config(c, "src/config/default.conf");
+	std::vector<Context *> servers = get_context_by_name(c, "server");
 //	print_servers(servers);
 
 	Socket s1,s2;
 	try
 	{
-		s1.init_socket(servers[0]->get_directive_by_key("host")[0], servers[0]->get_directive_by_key("listen")[0]);
-		s2.init_socket(servers[1]->get_directive_by_key("host")[0], servers[1]->get_directive_by_key("listen")[0]);
+	 	s1.init_socket("0.0.0.0", "8080"); // <- c2 = s1
+	 	s2.init_socket("0.0.0.0", "9090");
+		// s1.init_socket(servers[0]->get_directive_by_key("host")[0], servers[0]->get_directive_by_key("listen")[0]);
+		// s2.init_socket(servers[1]->get_directive_by_key("host")[0], servers[1]->get_directive_by_key("listen")[0]);
 	}
 	catch (Socket::SocketException &e)
 	{
