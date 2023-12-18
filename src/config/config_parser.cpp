@@ -70,24 +70,6 @@ static void preprocess(std::string &str)
 	str.erase(str.find_last_not_of(" \t\v\r") + 1);
 }
 
-// static int check_directive(const std::string &k, const std::vector<std::string> &v)
-// {
-// 	if (k.compare("autoindex") == 0)
-// 	{
-// 		if (v.size() != 1 || v[0].compare("on") != 0 || v[0].compare("off") != 0)
-// 			return -1;
-// 	}
-// 	else if (k.compare("allow_methods") == 0)
-// 	{
-// 		for (unsigned long i = 0; i < v.size(); i++)
-// 		{
-// 			if (v[i].compare("GET") != 0 || v[i].compare("POST") != 0 || v[i].compare("DELETE") != 0)
-// 				return -1;
-// 		}
-// 	}
-// 	return 0;
-// }
-
 static int parse_context_directives(Context &config, std::string &str)
 {
 	preprocess(str);
@@ -95,6 +77,7 @@ static int parse_context_directives(Context &config, std::string &str)
 		return -1;
 	if (str.empty())
 		return 0;
+	str.erase(std::remove(str.begin(), str.end(), ';'), str.end());
 	std::stringstream ss(str);
 	std::istream_iterator<std::string> begin(ss);
 	std::istream_iterator<std::string> end;
@@ -173,7 +156,14 @@ int parse_config(Context &config, const std::string &filename)
 // 		std::cout << "\nerror\n";
 // 		return 0;
 // 	}
-// 	print_config(config);
+// 	// print_config(config);
+// 	// std::vector<Context *> v = get_context_by_name(config, "server");
+// 	// std::cout << "listen: " << (*v[0]).get_directive_by_key("listen")[0] << "\n";
+// 	if (config_integrity_check(config) == -1)
+// 	{
+// 		std::cout << "\nintegrity check failed\n";
+// 		return 0;
+// 	}
 // 	// try
 // 	// {
 // 	// 	config.get_directive_by_key("test");

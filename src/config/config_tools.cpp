@@ -74,22 +74,107 @@ void print_contexts(const std::vector<Context *> &v)
 	}
 }
 
+static int http_integrity_check(const Context &config)
+{
+	std::map<std::string, std::vector<std::string> > dir = config.get_directive();
+	if (dir.count("root") != 1 || dir.count("autoindex") != 1)
+		return -1;
+	std::map<std::string, std::vector<std::string> >::const_iterator it;
+	for (it = dir.begin(); it != dir.end(); it++)
+	{
+		if ((*it).first.find("autoindex") != std::string::npos)
+		{
+			if ((*it).second[0].compare("on") != 0 && (*it).second[0].compare("off") != 0)
+				return -1;
+		}
+		if ((*it).first.find("default_error_page_") != std::string::npos)
+			return 0;
+	}
+	return -1;
+}
+
+static int server_integrity_check(const Context &config)
+{
+	std::map<std::string, std::vector<std::string> > dir = config.get_directive();
+	if (dir.count("listen") != 1
+			|| dir.count("host") != 1
+			|| dir.count("client_max_body_size") != 1
+			|| dir.count("index") != 1
+			|| dir.count("save_path") != 1)
+		return -1;
+	try
+	{
+		std::vector<std::string> am(config.get_directive_by_key("allow_methods"));
+		std::sort(am.begin(), am.end());
+		for (unsigned long i = 0; i < am.size(); i++)
+		{
+			if (am[i].compare("DELETE") == 0
+					|| am[i].compare("GET") == 0
+					|| am[i].compare("POST") == 0)
+				continue ;
+			else
+				return -1;
+		}
+	}
+	catch (...)
+	{
+		return -1;
+	}
+	return 0;
+}
+
+static int location_integrity_check(const Context &config)
+{
+	std::map<std::string, std::vector<std::string> > dir = config.get_directive();
+	if (dir.count("index") + dir.count("return") != 1 && dir.count("cgi_path") + dir.count("cgi_extention") == 0)
+		return -1;
+	if (dir.count("index") + dir.count("return") == 0 && dir.count("cgi_path") + dir.count("cgi_extention") != 2)
+		return -1;
+	if (dir.count("index") + dir.count("return") == 1 && dir.count("cgi_path") + dir.count("cgi_extention") != 0)
+		return -1;
+	if (dir.count("index") + dir.count("return") > 1 && dir.count("cgi_path") + dir.count("cgi_extention") != 0)
+		return -1;
+	return 0;
+}
+
+static int directive_integrity_check(const Context &config)
+{
+	std::map<std::string, std::vector<std::string> > dir = config.get_directive();
+	std::map<std::string, std::vector<std::string> >::const_iterator it;
+	for (it = dir.begin(); it != dir.end(); it++)
+	{
+		if ((*it).first.compare("allow_methods") != 0)
+		{
+			if ((*it).second.size() != 1)
+				return -1;
+		}
+	}
+	return 0;
+}
+
 int config_integrity_check(const Context &config)
 {
+	if (directive_integrity_check(config) == -1)
+		return -1;
+	if (config.get_name().compare("http") == 0)
+	{
+		if (http_integrity_check(config) == -1)
+			return -1;
+	}
+	else if (config.get_name().compare("server") == 0)
+	{
+		if (server_integrity_check(config) == -1)
+			return -1;
+	}
+	else if (config.get_name().compare("location") == 0)
+	{
+		if (location_integrity_check(config) == -1)
+			return -1;
+	}
 	for (unsigned long i = 0; i < config.get_child().size(); i++)
 	{
-		if (config.get_name().compare("http") == 0)
-		{
-			
-		}
-		else if (config.get_name().compare("server") == 0)
-		{
-
-		}
-		else if (config.get_name().compare("location") == 0)
-		{
-
-		}
+		if (config_integrity_check(*config.get_child()[i]) == -1)
+			return -1;
 	}
 	return 0;
 }
