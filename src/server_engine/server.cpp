@@ -96,7 +96,10 @@ void	Server::init_request(int event_fd, epoll_event *epoll_ev)
 	std::string data = recv_request(event_fd);
 
 	if (parse_http_request(request, data) == 400);
-		throw (Response::responseException());
+	{
+		this->response_set = std::make_pair(request, this->request_set[event_fd]);
+		throw (Request::parsingException());
+	}
 	this->response_set = std::make_pair(request, this->request_set[event_fd]);
 	this->check_split_request();
 	if (!this->split_request)
@@ -162,9 +165,10 @@ void	Server::handle_epoll_events(int event_fd, epoll_event *epoll_ev)
 		std::cerr << e.what() << std::endl;
 		remove_fd_in_epoll(this->epoll_fd, event_fd, epoll_ev);
 	}
-	catch (Response::responseException &e)
+	catch (Request::parsingException &e)
 	{
 		Response response;
+		response.make_error_response(response, response_set, BAD_REQUEST);
 		send_response(response, event_fd);
 		remove_fd_in_epoll(this->epoll_fd, event_fd, epoll_ev);
 	}

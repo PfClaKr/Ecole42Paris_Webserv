@@ -1,6 +1,6 @@
 NAME = webserv
 
-VPATH = src/http_request/ src/http_response/ src/server_engine/ src/config/
+VPATH = src/ src/http_request/ src/http_response/ src/server_engine/ src/config/
 
 SRCS =	main.cpp \
 		request.cpp \
@@ -9,6 +9,8 @@ SRCS =	main.cpp \
 		config_parser.cpp \
 		config_tools.cpp \
 		server.cpp \
+		cgi.cpp \
+		status_code.cpp \
 		socket.cpp
 
 OBJDIR = .obj

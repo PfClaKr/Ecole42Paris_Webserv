@@ -1,7 +1,9 @@
 #ifndef CGI_HPP
 # define CGI_HPP
 
+#include <wait.h>
 #include "response.hpp"
+#include "mime.hpp"
 #include "../http_request/request.hpp"
 
 class Cgi
@@ -17,14 +19,9 @@ class Cgi
 			GATEWAY_INTERFACE,
 			HTTP_ACCEPT,
 			HTTP_ACCEPT_CHARSET,
-			HTTP_ACCEPT_ENVODING,
+			HTTP_ACCEPT_ENCODING,
 			HTTP_ACCEPT_LANGUAGE,
-			HTTP_FORWARDED,
-			HTTP_HOST,
-			HTTP_PROXY_AUTHORIZATION,
-			HTTP_USER_AGENT,
 			PATH_INFO,
-			PATH_TRANSLATED,
 			QUERY_STRING,
 			REMOTE_ADDR,
 			REMOTE_HOST,
@@ -39,6 +36,22 @@ class Cgi
 		};
 		char *env[LEN_OF_ENUM];
 		std::string output;
+		std::string path;
+		std::string file;
+
+		void set_cgi_meta_variable(Request &request, Context *context, std::string file, std::string query);
+		void set_cgi_path(std::string file, Context *context);
+		void run_cgi(Request &request, Context *context, std::string file);
+		std::string set_output_in_response_body(Response *response);
+	public:
+		std::string init_cgi(Request &request, Context *context, Response *response);
+		class CgiException : public std::exception
+		{
+			public:
+				const char *what() const throw();
+		};
 };
+
+std::string get_mime_type(std::string file);
 
 #endif

@@ -1,6 +1,9 @@
 #ifndef STATUS_CODE_HPP
 # define STATUS_CODE_HPP
 
+#include <iostream>
+#include "response.hpp"
+
 // @https://datatracker.ietf.org/doc/html/rfc7231#section-6
 enum http_status_code
 {
@@ -55,5 +58,7 @@ enum http_status_code
     NOT_EXTENDED = 510,
     NETWORK_AUTHENTICATION_REQUIRED = 511
 };
+
+std::string get_status_line(int status_code);
 
 #endif

@@ -21,6 +21,11 @@ class Request
 			this->body = "";
 		};
 		void	clear_value();
+		class parsingException : public std::exception
+		{
+			public:
+				const char *what() const throw();
+		};
 };
 
 int parse_http_request(Request &request, std::string req);
