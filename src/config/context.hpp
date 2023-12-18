@@ -18,10 +18,12 @@ class Context
 
         Context(Context &src)
         {
+		(void) src;
                 std::cerr << "copy constructor is not allowed";
         }
         Context &operator=(Context &src)
         {
+		(void) src;
                 std::cerr << "copy assignement operator is not allowed";
 		return *this;
         }

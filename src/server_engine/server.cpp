@@ -15,7 +15,7 @@ void	add_fd_in_epoll(int epoll_fd, int fd, uint32_t opt)
 
 int find_pair_by_key(std::vector<std::pair<Socket, Context *>> &pair, int &key)
 {
-	for (int i = 0; i < pair.size(); i++)
+	for (unsigned long i = 0; i < pair.size(); i++)
 	{
 		if (pair[i].first.get_fd() == key)
 			return (i);
@@ -33,7 +33,7 @@ void	Server::init_epoll()
 
 int	Server::accept_new_connection(int event_fd)
 {
-	struct epoll_event epoll_ev;
+	// struct epoll_event epoll_ev;
 	struct sockaddr_in addr;
 	socklen_t socklen = sizeof(addr);
 
@@ -83,7 +83,7 @@ void	Server::check_split_request()
 {
 	Request request = this->response_set.first;
 	int	content_length = std::atoi(request.header["Content_length"].c_str());
-	if (request.body.size() < content_length)
+	if (request.body.size() < (unsigned long) content_length)
 		this->split_request = true;
 	this->split_request = false;
 }
@@ -111,6 +111,8 @@ void	Server::init_request(int event_fd, epoll_event *epoll_ev)
 
 void	Server::send_response(Response &response, int fd)
 {
+	(void) response;
+	(void) fd;
 	// int	send_size;
 	// send_size = send(fd, response.response, response.response.size(), 0);
 	// if (send_size <= 0)

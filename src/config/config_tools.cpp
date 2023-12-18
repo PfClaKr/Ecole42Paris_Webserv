@@ -76,7 +76,7 @@ void print_contexts(const std::vector<Context *> &v)
 
 int config_integrity_check(const Context &config)
 {
-	for (int i = 0; i < config.get_child().size(); i++)
+	for (unsigned long i = 0; i < config.get_child().size(); i++)
 	{
 		if (config.get_name().compare("http") == 0)
 		{

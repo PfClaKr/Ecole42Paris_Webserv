@@ -45,7 +45,7 @@ int	Response::check_method_allow(Request &request, Context *context)
 	std::string request_method = request.startline["method"];
 	std::vector<std::string> allowed_method = context->get_directive_by_key("allow_methods");
 
-	for (int i = 0; i < allowed_method.size(); i++)
+	for (unsigned long i = 0; i < allowed_method.size(); i++)
 	{
 		if (allowed_method[i] == request_method)
 			return 0;
@@ -56,6 +56,7 @@ int	Response::check_method_allow(Request &request, Context *context)
 
 int	Response::check_request_uri(Request &request, Context *context)
 {
+	(void) context;
 	if (request.startline["uri"].front() != '/')
 	{
 		this->status_code = FORBIDDEN;
@@ -93,7 +94,7 @@ bool	Response::set_location_in_request(Request &request, Context *context)
 	std::vector<Context *> location = context->get_child();
 	std::string path = request.startline["uri"];
 
-	for (int i = 0; i < location.size(); i++)
+	for (unsigned long i = 0; i < location.size(); i++)
 	{
 		if (path == location[i]->get_args()[0] && "location" == location[i]->get_name())
 		{
@@ -274,6 +275,8 @@ void	Response::handle_post_method(Request &request, Context *context)
 
 void	Response::handle_delete_method(Request &request, Context *context)
 {
+	(void) request;
+	(void) context; //?
 	std::ifstream file(this->path.c_str());
 
 	bool is_dir = file.good() && !file.rdbuf()->in_avail();
@@ -367,7 +370,7 @@ void	Response::set_default_error_page(Context *context)
 		std::pair<std::string, std::vector<std::string> > tmp = *it;
 		if (tmp.first.find("default_error_page") != std::string::npos)
 		{
-			int pos = tmp.first.find_first_not_of("default_error_page");
+			const unsigned long pos = tmp.first.find_first_not_of("default_error_page");
 			if (pos == std::string::npos)
 				Response::parsingException();
 			std::string new_tmp = tmp.first.substr(pos, tmp.first.size());
@@ -378,6 +381,7 @@ void	Response::set_default_error_page(Context *context)
 
 void	Response::make_http_response(Response &response, std::pair<Request, Context *> &response_set)
 {
+	(void) response;
 	try
 	{
 		set_default_error_page(response_set.second);
@@ -397,6 +401,7 @@ void	Response::make_http_response(Response &response, std::pair<Request, Context
 
 void	Response::make_error_response(Response &response, std::pair<Request, Context *> &response_set, int status_code)
 {
+	(void) response;
 	set_default_error_page(response_set.second);
 	this->status_code = status_code;
 	set_response();

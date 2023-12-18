@@ -49,6 +49,8 @@ void	Cgi::run_cgi(Request &request, Context *context, std::string file)
 {
 	int fd[2];
 	char ret[100000];
+	(void) context;
+	(void) file;
 
 	FILE *file_in = tmpfile();
 	int fd_in = fileno(file_in);
@@ -110,7 +112,7 @@ void	Cgi::set_cgi_path(std::string file, Context *context)
 	
 	std::vector<Context *> location = context->get_child();
 	Context *cgi_bin;
-	for (int i = 0; i < location.size(); i++)
+	for (unsigned long i = 0; i < location.size(); i++)
 	{
 		if (location[i]->get_name() == "/cgi_bin")
 		{
@@ -125,6 +127,7 @@ void	Cgi::set_cgi_path(std::string file, Context *context)
 
 std::string	Cgi::set_output_in_response_body(Response *response)
 {
+	(void) response;
 	if (this->output.size() > 0)
 		return ((this->output.substr(output.find("\r") + 4)));
 	else

@@ -19,7 +19,7 @@ OBJS = $(SRCS:%.cpp=$(OBJDIR)/%.o)
 RM = rm -rf
 
 CC = c++
-CXX_FLAGS = -g3 #-Wextra -Wall -Werror
+CXX_FLAGS = -g3 -Wextra -Wall -Werror
 HEAD = -I includes
 
 ${OBJDIR}/%.o : %.cpp | $(OBJDIR)

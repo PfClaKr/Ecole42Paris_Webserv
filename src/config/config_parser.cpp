@@ -70,23 +70,23 @@ static void preprocess(std::string &str)
 	str.erase(str.find_last_not_of(" \t\v\r") + 1);
 }
 
-static int check_directive(const std::string &k, const std::vector<std::string> &v)
-{
-	if (k.compare("autoindex") == 0)
-	{
-		if (v.size() != 1 || v[0].compare("on") != 0 || v[0].compare("off") != 0)
-			return -1;
-	}
-	else if (k.compare("allow_methods") == 0)
-	{
-		for (int i = 0; i < v.size(); i++)
-		{
-			if (v[i].compare("GET") != 0 || v[i].compare("POST") != 0 || v[i].compare("DELETE") != 0)
-				return -1;
-		}
-	}
-	return 0;
-}
+// static int check_directive(const std::string &k, const std::vector<std::string> &v)
+// {
+// 	if (k.compare("autoindex") == 0)
+// 	{
+// 		if (v.size() != 1 || v[0].compare("on") != 0 || v[0].compare("off") != 0)
+// 			return -1;
+// 	}
+// 	else if (k.compare("allow_methods") == 0)
+// 	{
+// 		for (unsigned long i = 0; i < v.size(); i++)
+// 		{
+// 			if (v[i].compare("GET") != 0 || v[i].compare("POST") != 0 || v[i].compare("DELETE") != 0)
+// 				return -1;
+// 		}
+// 	}
+// 	return 0;
+// }
 
 static int parse_context_directives(Context &config, std::string &str)
 {
@@ -101,8 +101,8 @@ static int parse_context_directives(Context &config, std::string &str)
 	std::vector<std::string> v(begin, end);
 	std::string k = v[0];
 	v.erase(v.begin());
-	if (check_directive(k, v) == -1)
-		return -1;
+	// if (check_directive(k, v) == -1)
+	// 	return -1;
 	config.add_directive(k, v);
 	return 0;
 }
@@ -156,9 +156,9 @@ int parse_config(Context &config, const std::string &filename)
 		return -1;
 	int context_level = 0;
 	parse_context(config, config_file, context_level);
+	config_file.close();
 	if (context_level != 0)
 		return -1;
-	config_file.close();
 	return 0;
 }
 
