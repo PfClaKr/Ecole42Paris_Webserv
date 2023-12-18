@@ -1,12 +1,12 @@
 #include "config_parser.hpp"
 
-static void sp(int n)
+static void sp(const int n)
 {
 	for (int i = 0; i < n; i++)
 		std::cout << " ";
 }
 
-static void print_context(Context &c, int indent = 0)
+static void print_context(const Context &c, const int indent = 0)
 {
 	std::map<std::string, std::vector<std::string> >::const_iterator it;
 	for (it = c.get_directive().begin(); it != c.get_directive().end(); it++)
@@ -32,27 +32,34 @@ static void print_context(Context &c, int indent = 0)
 	}
 }
 
-void print_config(Context &config)
+void print_config(const Context &config)
 {
 	print_context(config);
 }
 
-void get_servers(Context &c, std::vector<Context *> &servers)
+static void traverse_context(Context &c, std::vector<Context *> &v, const std::string &s)
 {
-	if (c.get_name().compare("server") == 0)
-		servers.push_back(&c);
+	if (c.get_name().compare(s) == 0)
+		v.push_back(&c);
 	for (unsigned long i = 0; i < c.get_child().size(); i++)
 	{
-		get_servers(*c.get_child()[i], servers);
+		traverse_context(*c.get_child()[i], v, s);
 	}
 }
 
-void print_servers(std::vector<Context *> &servers)
+std::vector<Context *> get_context_by_name(Context &c, const std::string &name)
 {
-	for (unsigned long i = 0; i < servers.size(); i++)
+	std::vector<Context *> v;
+	traverse_context(c, v, name);
+	return v;
+}
+
+void print_contexts(const std::vector<Context *> &v)
+{
+	for (unsigned long i = 0; i < v.size(); i++)
 	{
 		std::map<std::string, std::vector<std::string> >::const_iterator it;
-		for (it = servers[i]->get_directive().begin(); it != servers[i]->get_directive().end(); it++)
+		for (it = v[i]->get_directive().begin(); it != v[i]->get_directive().end(); it++)
 		{
 			std::cout << it->first;
 			for (unsigned long j = 0; j < it->second.size(); j++)

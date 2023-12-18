@@ -12,6 +12,6 @@
 
 # include "context.hpp"
 
-void	parse_config(Context &config, std::string filename);
+int	parse_config(Context &config, const std::string &filename);
 
 #endif

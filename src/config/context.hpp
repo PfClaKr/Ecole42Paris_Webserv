@@ -15,6 +15,16 @@ class Context
 	std::map<std::string, std::vector<std::string> > directive;
 	std::vector<Context *> child;
 
+        Context(Context &src)
+        {
+                std::cerr << "copy constructor is not allowed";
+        }
+        Context &operator=(Context &src)
+        {
+                std::cerr << "copy assignement operator is not allowed";
+		return *this;
+        }
+
 public:
 	void	set_args(const std::vector<std::string> args);
 	void	add_directive(const std::string k, const std::vector<std::string> v);
@@ -38,36 +48,19 @@ public:
 			this->directive["listen"].push_back("80");
 		}
 	};
-        Context(Context &src)
-        {
-                std::cerr << "copy constructor is not allowed";
-                throw FatalErrorException();
-        }
-        Context &operator=(Context &src)
-        {
-                std::cerr << "copy assignement operator is not allowed";
-                throw FatalErrorException();
-        }
 	~Context(){
 		for (unsigned long i = 0; i < child.size(); i++)
 		{
 			delete child[i];
 		}
 	};
-	class FatalErrorException : public std::exception
-	{
-		virtual const char* what() const throw()
-		{
-			return "Fatal Error";
-		}
-	};
-	class SyntaxErrorException : public std::exception
-	{
-		virtual const char* what() const throw()
-		{
-			return "Syntax Error";
-		}
-	};
+	// class FatalErrorException : public std::exception
+	// {
+	// 	virtual const char* what() const throw()
+	// 	{
+	// 		return "Fatal Error";
+	// 	}
+	// };
 };
 
 #endif

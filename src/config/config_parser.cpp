@@ -5,15 +5,6 @@ static bool BothAreSpaces(char lhs, char rhs)
 	return (lhs == rhs) && (lhs == ' ');
 }
 
-static std::vector<std::string> str_split_vec(std::string s)
-{
-	std::stringstream ss(s);
-	std::istream_iterator<std::string> begin(ss);
-	std::istream_iterator<std::string> end;
-	std::vector<std::string> v(begin, end);
-	return v;
-}
-
 static std::string context_name(std::string str)
 {
 	str.erase(0, str.find_first_not_of(" \t\v\r"));
@@ -21,7 +12,7 @@ static std::string context_name(std::string str)
 	return str;
 }
 
-static int count_char_in_str(std::string s, char c)
+static int count_char_in_str(const std::string &s, const char c)
 {
 	int count = 0;
 	for (unsigned long i = 0; i < s.length(); i++)
@@ -34,7 +25,7 @@ static int count_char_in_str(std::string s, char c)
 	return count;
 }
 
-static int lexer_config_directives(std::string str)
+static int lexer_config_directives(const std::string &str)
 {
 	if (str.empty())
 		return 0;
@@ -45,7 +36,7 @@ static int lexer_config_directives(std::string str)
 	return 0;
 }
 
-static int lexer_context(std::string str)
+static int lexer_context(const std::string &str)
 {
 	if (str.empty())
 		return 0;
@@ -79,41 +70,54 @@ static void preprocess(std::string &str)
 	str.erase(str.find_last_not_of(" \t\v\r") + 1);
 }
 
-static void parse_context_directives(Context &config, std::string str)
+// static int check_directive(const std::string &k, const std::vector<std::string> &v)
+// {
+// 	if (k.compare("autoindex") == 0)
+// 	{
+// 		if (v.size() != 1 || v[0].compare("on") != 0 || v[0].compare("off") != 0)
+// 			return -1;
+// 	}
+// 	else if (k.compare("allow_methods") == 0)
+// 	{
+// 		if (v.size() > 3 || std::find(v.begin(), v.end(), "GET") != v.end())
+// 	}
+// 	return 0;
+// }
+
+static int parse_context_directives(Context &config, std::string &str)
 {
 	preprocess(str);
 	if (lexer_config_directives(str) == -1)
-		throw Context::SyntaxErrorException();
+		return -1;
 	if (str.empty())
-		return ;
-	char s[str.length() + 1];
-	std::strcpy(s, str.c_str());
-	char *p = strtok(s, ";");
-	while (p != NULL)
-	{
-		std::vector<std::string> v = str_split_vec(p);
-		std::string k = v[0];
-		v.erase(v.begin());
-		config.add_directive(k, v);
-		p = strtok(NULL, ";");
-	}
+		return 0;
+	std::stringstream ss(str);
+	std::istream_iterator<std::string> begin(ss);
+	std::istream_iterator<std::string> end;
+	std::vector<std::string> v(begin, end);
+	std::string k = v[0];
+	v.erase(v.begin());
+	// if (check_directive(k, v) == -1)
+	// 	return -1;
+	config.add_directive(k, v);
+	return 0;
 }
 
-static void parse_context(Context &config, std::fstream &config_file, int &context_level)
+static int parse_context(Context &config, std::fstream &config_file, int &context_level)
 {
 	std::string str;
 	while (!config_file.eof() && std::getline(config_file, str))
 	{
 		preprocess(str);
 		if (lexer_context(str) == -1)
-			throw Context::SyntaxErrorException();
+			return -1;
 		if (str.find("}") != std::string::npos)
 		{
 			context_level--;
 			break ;
 		}
 		if (context_level < 0)
-			throw Context::SyntaxErrorException();
+			return -1;
 		if (str.empty())
 			continue ;
 		if (str.find("{") != std::string::npos)
@@ -129,51 +133,55 @@ static void parse_context(Context &config, std::fstream &config_file, int &conte
 				args.erase(args.end() - 1);
 				config.get_child().back()->set_args(args);
 			}
-			parse_context(*config.get_child().back(), config_file, context_level);
+			if (parse_context(*config.get_child().back(), config_file, context_level) == -1)
+				return -1;
 			continue ;
 		}
-		parse_context_directives(config, str);
+		if (parse_context_directives(config, str) == -1)
+			return -1;
 	}
+	return 0;
 }
 
-void parse_config(Context &config, std::string filename)
+int parse_config(Context &config, const std::string &filename)
 {
 	std::fstream config_file;
 	config_file.open(filename.c_str(), std::fstream::in);
 	if (!config_file.is_open())
-		throw Context::FatalErrorException();
+		return -1;
 	int context_level = 0;
 	parse_context(config, config_file, context_level);
 	if (context_level != 0)
-		throw Context::SyntaxErrorException();
+		return -1;
 	config_file.close();
+	return 0;
 }
 
-// #include "config_tools.hpp"
+#include "config_tools.hpp"
 
-// int main()
-// {
-// 	Context config;
-// 	std::cout << "parse config: \n\n";
-// 	try
-// 	{
-// 		parse_config(config, "default_config");
-// 	}
-// 	catch (std::exception &e)
-// 	{
-// 		std::cerr << e.what() << "\n";
-// 		return 0;
-// 	}
-// 	print_config(config);
-// 	try
-// 	{
-// 		config.get_directive_by_key("test");
-// 	}
-// 	catch (std::exception &e)
-// 	{
-// 		std::cerr << "exception raised on " << e.what() << "\n";
-// 	}
-// 	std::vector<Context *> servers;
-// 	get_servers(config, servers);
-// 	return 0;
-// }
+int main()
+{
+	Context config;
+	std::cout << "parse config: \n\n";
+	if (parse_config(config, "default.conf") == -1)
+	{
+		std::cout << "\nerror\n";
+		return 0;
+	}
+	// print_config(config);
+	// try
+	// {
+	// 	config.get_directive_by_key("test");
+	// }
+	// catch (std::exception &e)
+	// {
+	// 	std::cerr << "exception raised on " << e.what() << "\n";
+	// }
+	std::vector<Context *> servers;
+	std::vector<Context *> http;
+	servers = get_context_by_name(config, "server");
+	http = get_context_by_name(config, "http");
+	print_contexts(servers);
+	print_contexts(http);
+	return 0;
+}

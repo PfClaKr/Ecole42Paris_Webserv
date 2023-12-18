@@ -3,8 +3,8 @@
 
 # include "context.hpp"
 
-void	print_config(Context &config);
-void	get_servers(Context &c, std::vector<Context *> &servers);
-void	print_servers(std::vector<Context *> &servers);
+void	                print_config(Context &config);
+std::vector<Context *>	get_context_by_name(Context &c, const std::string &name);
+void	                print_contexts(const std::vector<Context *> &v);
 
 #endif
