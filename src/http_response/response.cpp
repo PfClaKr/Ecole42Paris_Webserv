@@ -21,6 +21,9 @@ int	Response::check_host_in_header(Request &request)
 	if (host.empty())
 	{
 		this->status_code = BAD_REQUEST;
+		#ifdef DEBUG
+			std::cout << DARK_BLUE << "Error with no host in request integrity check" << RESET << std::endl;
+		#endif
 		return -1;
 	}
 	return 0;
@@ -35,11 +38,17 @@ int	Response::check_body_size(Request &request, Context *context)
 	if (request_body_size > content_length)
 	{
 		this->status_code = PAYLOAD_TOO_LARGE;
+		#ifdef DEBUG
+			std::cout << DARK_BLUE << "Error with body_size big then Header in request integrity check" << RESET << std::endl;
+		#endif
 		return -1;
 	}
 	if (request_body_size > max_body_size)
 	{
 		this->status_code = BAD_REQUEST;
+		#ifdef DEBUG
+			std::cout << DARK_BLUE << "Error with body_size big then config max size in request integrity check" << RESET << std::endl;
+		#endif
 		return -1;
 	}
 	return 0;
@@ -56,6 +65,9 @@ int	Response::check_method_allow(Request &request, Context *context)
 			return 0;
 	}
 	this->status_code = METHOD_NOT_ALLOWED;
+	#ifdef DEBUG
+		std::cout << DARK_BLUE << "Error with not allowed in request integrity check" << RESET << std::endl;
+	#endif
 	return -1;
 }
 
@@ -65,6 +77,9 @@ int	Response::check_request_uri(Request &request, Context *context)
 	if (request.startline["uri"].front() != '/')
 	{
 		this->status_code = FORBIDDEN;
+		#ifdef DEBUG
+			std::cout << DARK_BLUE << "Error with uri in request integrity check" << RESET << std::endl;
+		#endif
 		return -1;
 	}
 	return 0;
@@ -78,6 +93,23 @@ int	Response::check_integrity_request(std::pair<Request, Context *> &response_se
 		|| !check_request_uri(response_set.first, response_set.second))
 		return -1;
 	return 0;
+}
+
+void Response::set_response_error_page()
+{
+	std::fstream file;
+	std::string path = this->default_error_page[this->status_code];
+	std::string raw_body;
+
+	if (path.back() == '/')
+		return ;
+	file.open(path.c_str(), std::ios::in);
+	if (!file.good())
+		return ;
+	raw_body = std::string(std::istreambuf_iterator<char>(file), std::istreambuf_iterator<char>());
+	file.close();
+	this->body.first = raw_body;
+	this->body.second = "text/html";
 }
 
 void	Response::set_response()
@@ -101,10 +133,7 @@ void	Response::set_response()
 	if (header.find("Connection") == header.end())
 		os << "Connection: keep-alive\r\n";
 	if (default_error_page.find(status_code) != default_error_page.end())
-	{
-		body.first = default_error_page[status_code];
-		body.second = "text/html";
-	}
+		set_response_error_page();
 	else
 	{
 		body.first = "<h1>" + Response::get_status_line(status_code) + "</h1>";
@@ -135,19 +164,33 @@ void	Response::set_default_error_page(Context *context)
 {
 	const Context *http = context->get_parent();
 	std::map<std::string, std::vector<std::string> > directive = http->get_directive();
-	
+	std::string root = http->get_directive_by_key("root").front();
+
 	for (std::map<std::string, std::vector<std::string> >::iterator it = directive.begin(); it != directive.end(); it++)
 	{
 		std::pair<std::string, std::vector<std::string> > tmp = *it;
 		if (tmp.first.find("default_error_page") != std::string::npos)
 		{
 			const unsigned long pos = tmp.first.find_first_not_of("default_error_page");
-			if (pos == std::string::npos || pos != tmp.first.size() - 4)
+			if (pos == std::string::npos || pos != tmp.first.size() - 3)
 				continue;
-			std::string new_tmp = tmp.first.substr(pos + 1, tmp.first.size());
-			this->default_error_page[std::atoi(new_tmp.c_str())] = tmp.second.front();
+			std::string new_tmp = tmp.first.substr(pos, tmp.first.size());
+			this->default_error_page[std::atoi(new_tmp.c_str())] = root + tmp.second.front();
+			#ifdef DEBUG
+				std::cout << DARK_BLUE << "==============Set default error page============" << std::endl;
+				std::cout << "Raw was :" << tmp.first << " " << tmp.second.front() << std::endl;
+				std::cout << new_tmp << " : " << tmp.second.front() << RESET << std::endl;
+			#endif
 		}
 	}
+}
+
+void	Response::make_error_response(Response &response, std::pair<Request, Context *> &response_set, int status_code)
+{
+	(void) response;
+	set_default_error_page(response_set.second);
+	this->status_code = status_code;
+	set_response();
 }
 
 void	Response::make_http_response(Response &response, std::pair<Request, Context *> &response_set)
@@ -176,10 +219,16 @@ void	Response::make_http_response(Response &response, std::pair<Request, Context
 	}
 }
 
-void	Response::make_error_response(Response &response, std::pair<Request, Context *> &response_set, int status_code)
+Response::Response()
 {
-	(void) response;
-	set_default_error_page(response_set.second);
-	this->status_code = status_code;
-	set_response();
+	status_code = -1;
+}
+
+Response::Response(const Response &ref)
+{
+	(void)ref;
+}
+
+Response::~Response()
+{
 }

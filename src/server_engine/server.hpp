@@ -26,8 +26,10 @@ class Server
 		int		is_keep_alive();
 		std::string recv_request(int fd);
 		void	send_response(Response &response, int fd);
+		Server(const Server &ref);
 	public:
 		Server();
+		~Server();
 		int	is_up;
 		void set_server_set(Socket s, Context *c);
 		int		init_server();

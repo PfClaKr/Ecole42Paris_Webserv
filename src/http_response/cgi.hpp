@@ -5,6 +5,7 @@
 #include "response.hpp"
 #include "mime.hpp"
 #include "../http_request/request.hpp"
+#include "../config/colors.hpp"
 
 class Response;
 
@@ -43,9 +44,12 @@ class Cgi
 
 		void set_cgi_meta_variable(Request &request, Context *context, std::string file, std::string query);
 		void set_cgi_path(std::string file, Context *context);
-		void run_cgi(Request &request, Context *context, std::string file);
-		std::string set_output_in_response_body(Response *response);
+		void run_cgi(Request &request);
+		std::string set_output_in_response_body();
+		Cgi(const Cgi &ref);
 	public:
+		Cgi();
+		~Cgi();
 		std::string init_cgi(Request &request, Context *context, Response *response);
 
 		class CgiException : public std::exception

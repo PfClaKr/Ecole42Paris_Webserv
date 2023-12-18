@@ -98,6 +98,7 @@ int parse_http_request(Request &request, std::string req)
 
 void print_http_request(Request &request)
 {
+	std::cout << DARK_BLUE;
 	std::cout << "==============Request parsing=================\n";
 	std::cout << "Method : " << request.startline["method"] << std::endl;
 	std::cout << "Uri    : " << request.startline["uri"] << std::endl;
@@ -107,7 +108,7 @@ void print_http_request(Request &request)
 	std::cout << "connect: " << request.header["connection"] << std::endl;
 	std::cout << "=============================================\n";
 	std::cout << "Body   :\n" << request.body;
-	std::cout << "=============================================\n";
+	std::cout << "=============================================\n" << RESET;
 }
 
 void	Request::clear_value()

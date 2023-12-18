@@ -61,4 +61,9 @@ void	Response::set_root_index_path(Request &request, Context *context)
 	else
 		this->path += request_path;
 	this->query = "";
+	#ifdef DEBUG
+		std::cout << DARK_BLUE << "================Set_root_index_path=================" << std::endl;
+		std::cout << "Raw was -> Root in directive : " << root << " request_path : " << request_path << std::endl;
+		std::cout << "After process -> Path : " << this->path << ", Query : " << this->query << RESET << std::endl; 
+	#endif
 }

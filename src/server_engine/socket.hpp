@@ -26,10 +26,9 @@ class Socket
 		void init_socket_bind();
 		void init_socket_fd_nonblocking();
 	public:
-		Socket(void){ 
-			fd = socket(AF_INET, SOCK_STREAM, 0);
-			socklen = sizeof(addr);
-		}
+		Socket();
+		Socket(const Socket &ref);
+		~Socket();
 		void init_socket(std::string host, std::string port);
 
 		int	get_fd();

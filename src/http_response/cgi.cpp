@@ -45,12 +45,10 @@ void	Cgi::set_cgi_meta_variable(Request &request, Context *context, std::string 
 	this->env[SERVER_SOFTWARE] = const_cast<char *>("SERVER_SOFTWARE=Nginx/2.0");
 }
 
-void	Cgi::run_cgi(Request &request, Context *context, std::string file)
+void	Cgi::run_cgi(Request &request)
 {
 	int fd[2];
 	char ret[100000];
-	(void) context;
-	(void) file;
 
 	FILE *file_in = tmpfile();
 	int fd_in = fileno(file_in);
@@ -119,15 +117,18 @@ void	Cgi::set_cgi_path(std::string file, Context *context)
 			cgi_bin = location[i];
 			std::map<std::string, std::vector<std::string> > directive = cgi_bin->get_directive();
 			this->path = directive["cgi_path"].front();
+			#ifdef DEBUG
+				std::cout << DARK_BLUE << "Cgi path : " << this->path << std::endl;
+				std::cout << "Location block in config name was : " << location[i]->get_name() << RESET << std::endl;
+			#endif
 			return ;
 		}
 	}
 	throw Cgi::CgiException();
 }
 
-std::string	Cgi::set_output_in_response_body(Response *response)
+std::string	Cgi::set_output_in_response_body()
 {
-	(void) response;
 	if (this->output.size() > 0)
 		return ((this->output.substr(output.find("\r") + 4)));
 	else
@@ -137,8 +138,24 @@ std::string	Cgi::set_output_in_response_body(Response *response)
 
 std::string	Cgi::init_cgi(Request &request, Context *context, Response *response)
 {
+	#ifdef DEBUG
+		std::cout << DARK_BLUE << "==============CGI===============" << RESET << std::endl;
+	#endif
 	set_cgi_meta_variable(request, context, response->get_path(), response->get_query());
 	set_cgi_path(response->get_path(), context);
-	run_cgi(request, context, response->get_path());
-	return (set_output_in_response_body(response));
+	run_cgi(request);
+	return (set_output_in_response_body());
+}
+
+Cgi::Cgi()
+{
+}
+
+Cgi::Cgi(const Cgi &ref)
+{
+	(void)ref;
+}
+
+Cgi::~Cgi()
+{
 }

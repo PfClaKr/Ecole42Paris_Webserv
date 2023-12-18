@@ -7,6 +7,7 @@
 # include <dirent.h>
 # include <sys/stat.h>
 # include "status_code.hpp"
+# include "../config/colors.hpp"
 # include "../http_request/request.hpp"
 # include "../config/context.hpp"
 # include "cgi.hpp"
@@ -39,7 +40,11 @@ class Response
 		void directory_autoindex();
 		void set_response();
 		void set_default_error_page(Context *context);
+		void set_response_error_page();
+		Response(const Response &ref);
 	public:
+		Response();
+		~Response();
 		void make_http_response(Response &response, std::pair<Request, Context *> &response_set);
 		void make_error_response(Response &response, std::pair<Request, Context *> &response_set, int status_code);
 		std::string get_path();

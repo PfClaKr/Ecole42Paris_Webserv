@@ -23,6 +23,10 @@ void	Response::handle_get_method(Request &request, Context *context)
 	const Context *http = context->get_parent();
 	std::string autoindex = http->get_directive_by_key("autoindex").front();
 	bool is_autoindex = autoindex == "on" ? false : true;
+	#ifdef DEBUG
+		std::cout << DARK_BLUE << "============handle GET method===============" << std::endl;
+		std::cout << "Is_dir , Is_php, Is autoindex : " << is_dir << " | " << is_php << " | " << is_autoindex << std::endl;
+	#endif
 
 	if (!request.body.empty())
 	{
@@ -31,7 +35,7 @@ void	Response::handle_get_method(Request &request, Context *context)
 	}
 
 	file.open(this->path.c_str(), std::ios::in);
-	if (file.good() && is_dir && is_autoindex) //path is directory
+	if (file.good() && is_dir && is_autoindex)
 		directory_autoindex();
 	else if (!is_dir)
 	{

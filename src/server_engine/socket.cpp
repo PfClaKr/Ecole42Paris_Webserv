@@ -52,3 +52,20 @@ const char *Socket::SocketException::what() const throw()
 	std::cout << RED << "Errors in the Socket setting" << RESET << std::endl;
 	return (strerror(errno));
 }
+
+Socket::Socket()
+{
+	fd = socket(AF_INET, SOCK_STREAM, 0);
+	socklen = sizeof(addr);
+}
+
+Socket::Socket(const Socket &ref)
+{
+	this->fd = ref.fd;
+	this->addr = ref.addr;
+	this->socklen =ref.socklen;
+}
+
+Socket::~Socket()
+{
+}

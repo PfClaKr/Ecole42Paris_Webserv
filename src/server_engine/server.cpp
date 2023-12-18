@@ -256,6 +256,15 @@ Server::Server()
 	this->epoll_fd = -1;
 }
 
+Server::Server(const Server &ref)
+{
+	(void)ref;
+}
+
+Server::~Server()
+{
+}
+
 // int	main()
 // {
 // 	Server server;
