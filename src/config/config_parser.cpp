@@ -77,6 +77,7 @@ static int parse_context_directives(Context &config, std::string &str)
 		return -1;
 	if (str.empty())
 		return 0;
+	str.erase(std::remove(str.begin(), str.end(), ';'), str.end());
 	std::stringstream ss(str);
 	std::istream_iterator<std::string> begin(ss);
 	std::istream_iterator<std::string> end;

@@ -17,7 +17,7 @@ std::string Response::get_ready_to_send()
 
 int	Response::check_host_in_header(Request &request)
 {
-	std::string host = request.header["Host"];
+	std::string host = request.header["host"];
 	if (host.empty())
 	{
 		this->status_code = BAD_REQUEST;
@@ -31,7 +31,7 @@ int	Response::check_host_in_header(Request &request)
 
 int	Response::check_body_size(Request &request, Context *context)
 {
-	int	content_length = std::atoi(request.header["Contetn_length"].c_str());
+	int	content_length = std::atoi(request.header["content_length"].c_str());
 	int max_body_size = std::atoi(context->get_directive_by_key("client_max_body_size")[0].c_str());
 	int request_body_size = request.body.size();
 
@@ -101,6 +101,7 @@ void Response::set_response_error_page()
 	std::string path = this->default_error_page[this->status_code];
 	std::string raw_body;
 
+
 	if (path.back() == '/')
 		return ;
 	file.open(path.c_str(), std::ios::in);
@@ -110,6 +111,10 @@ void Response::set_response_error_page()
 	file.close();
 	this->body.first = raw_body;
 	this->body.second = "text/html";
+	#ifdef DEBUG
+		std::cout << DARK_BLUE << "===========Set response error page============" << std::endl;
+		std::cout << "Path -> " << path << RESET << std::endl;
+	#endif
 }
 
 void	Response::set_response()
@@ -118,6 +123,12 @@ void	Response::set_response()
 	time_t clock = time(0);
 	char *clock_to_char = ctime(&clock);
 	std::string status_line = get_status_line(this->status_code);
+	#ifdef DEBUG
+		std::cout << DARK_BLUE << "==============Set response===============" << std::endl;
+		std::cout << "Status code : " << status_code << std::endl;
+		std::cout << "is body empty ? : " << this->body.first.empty() << std::endl;
+		std::cout << RESET;
+	#endif
 	if (status_line.empty())
 	{
 		this->status_code = 500;
@@ -132,30 +143,24 @@ void	Response::set_response()
 		os << it->first << ": " << it->second << "\r\n";
 	if (header.find("Connection") == header.end())
 		os << "Connection: keep-alive\r\n";
-	if (default_error_page.find(status_code) != default_error_page.end())
+	if (default_error_page.find(status_code) != default_error_page.end() && !body.first.empty())
 		set_response_error_page();
-	else
+	else if (status_code >= 300)
 	{
 		body.first = "<h1>" + Response::get_status_line(status_code) + "</h1>";
 	}
 	if (body.first.size())
 	{
 		os << "Content-Length: " << body.first.size() << "\r\n";
-		os << "Content-Type: " << body.second << "\r\n";
+		os << "Content-Type: " << body.second << "\r\n\r\n";
 		os << body.first;
 	}
 	else if (body_cgi.size())
 		os << body_cgi;
-	else if (body.first.empty() && status_code >= 400)
-	{
-		std::string tmp = "<h1>" + status_line + "<h1>";
-		os << "Content-Length: " << tmp.size() << "\r\n";
-		os << "Content_Type: text/html\r\n\r\n" << tmp;
-	}
 	else
 	{
 		os << "Content-Length: 0\r\n";
-		os << "Content-Type: text/html\r\n" << std::endl;
+		os << "Content-Type: text/html\r\n\r\n" << std::endl;
 	}
 	this->ready_to_send = os.str();
 }

@@ -101,7 +101,7 @@ void	Server::process_split_request(int event_fd, epoll_event *epoll_ev)
 void	Server::check_split_request()
 {
 	Request request = this->response_set.first;
-	int	content_length = std::atoi(request.header["Content_length"].c_str());
+	int	content_length = std::atoi(request.header["content_length"].c_str());
 	if (request.body.size() < (unsigned long) content_length)
 	{
 		this->split_request = true;
@@ -129,7 +129,7 @@ void	Server::init_request(int event_fd, epoll_event *epoll_ev)
 	this->check_split_request();
 	#ifdef DEBUG
 		print_http_request(request);
-		std::cout << DARK_BLUE << "is_split request " << event_fd << "? : ";
+		std::cout << DARK_BLUE << "is_split request? fd is -> " << event_fd << ": ";
 		this->split_request == true ? std::cout << "yes" : std::cout << "no";
 		std::cout << RESET << std::endl;
 	#endif

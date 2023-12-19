@@ -22,10 +22,11 @@ void	Response::handle_get_method(Request &request, Context *context)
 	bool is_php = check_is_php(this->path);
 	const Context *http = context->get_parent();
 	std::string autoindex = http->get_directive_by_key("autoindex").front();
-	bool is_autoindex = autoindex == "on" ? false : true;
+	std::string root = http->get_directive_by_key("root").front();
+	bool is_autoindex = autoindex == "on" ? true : false;
 	#ifdef DEBUG
 		std::cout << DARK_BLUE << "============handle GET method===============" << std::endl;
-		std::cout << "Is_dir , Is_php, Is autoindex : " << is_dir << " | " << is_php << " | " << is_autoindex << std::endl;
+		std::cout << "Is_dir , Is_php, Is autoindex : " << is_dir << " | " << is_php << " | " << is_autoindex << RESET <<std::endl;
 	#endif
 
 	if (!request.body.empty())
@@ -34,16 +35,21 @@ void	Response::handle_get_method(Request &request, Context *context)
 		return ;
 	}
 
-	file.open(this->path.c_str(), std::ios::in);
-	if (file.good() && is_dir && is_autoindex)
-		directory_autoindex();
-	else if (!is_dir)
+	if (is_php)// www/query.php
+	{
+		this->path = this->path.substr(this->path.find_last_of("/"), this->path.length() - this->path.find_last_of("/"));
+		this->path = root + "/cgi-bin" + this->path;
+		#ifdef DEBUG
+			std::cout << DARK_BLUE << "php.file path change : " << "path: " << this->path << RESET << "\n";
+		#endif
+	}
+	file.open(this->path.c_str(), std::fstream::in);
+	if (!file.good())
 	{
 		this->status_code = NOT_FOUND;
-		file.close();	
 		return ;
 	}
-	else if (is_php)
+	if (file.good() && is_php && !is_dir)
 	{
 		try
 		{
@@ -55,14 +61,25 @@ void	Response::handle_get_method(Request &request, Context *context)
 			file.close();
 			return ;
 		}
-		header["Content-Length"] = body_cgi.size();
+		header["content-length"] = body_cgi.size();
 		body.first.clear();
 		body.second.clear();
 	}
+	else if (file.good() && is_dir && is_autoindex)
+		directory_autoindex();
+	else if (is_dir)
+	{
+		this->status_code = NOT_FOUND;
+		return ;
+	}
 	else
 	{
-		body.first = std::string(std::istreambuf_iterator<char>(file), std::istreambuf_iterator<char>());
+		body.first = std::string((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
 		body.second = get_mime_type(this->path);
+		#ifdef DEBUG
+			std::cout << DARK_BLUE << "body is empty: " << body.first.empty();
+			std::cout << " ||| mime type: " << body.second << RESET << std::endl;
+		#endif
 	}
 	file.close();
 	this->status_code = OK;

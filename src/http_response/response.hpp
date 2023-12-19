@@ -31,8 +31,8 @@ class Response
 		int check_method_allow(Request &request, Context *context);
 		int check_request_uri(Request &request, Context *context);
 		void set_root_index_path(Request &request, Context *context);
-		bool set_location_in_request(Request &request, Context *context);
-		void check_index_or_redirection(Request &request, Context *context);
+		bool set_location_in_request(Request &request, Context *context, std::string root);
+		void check_index_or_redirection(Request &request, Context *context, std::string root);
 		void handle_request_by_method(Request &request, Context *context);
 		void handle_get_method(Request &request, Context *context);
 		void handle_post_method(Request &request, Context *context);

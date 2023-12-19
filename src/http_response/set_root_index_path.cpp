@@ -1,6 +1,6 @@
 #include "response.hpp"
 
-void	Response::check_index_or_redirection(Request &request, Context *context)
+void	Response::check_index_or_redirection(Request &request, Context *context, std::string root)
 {
 	std::pair<std::string, std::vector<std::string> > args = *(context->get_directive().begin());
 
@@ -12,7 +12,7 @@ void	Response::check_index_or_redirection(Request &request, Context *context)
 			return ;
 		}
 		this->status_code = MOVED_PERMANENTLY;
-		this->header["Location"] = args.second.front();
+		this->header["location"] = args.second.front();
 		return ;
 	}
 	else if (args.first == "index")
@@ -20,11 +20,11 @@ void	Response::check_index_or_redirection(Request &request, Context *context)
 		std::string location_path = context->get_args().front();
 		if (location_path.back() != '/')
 			location_path += '/';
-		this->path += location_path + args.second.front();
+		this->path = root + location_path + args.second.front();
 	}
 }
 
-bool	Response::set_location_in_request(Request &request, Context *context)
+bool	Response::set_location_in_request(Request &request, Context *context, std::string root)
 {
 	std::vector<Context *> location = context->get_child();
 	std::string path = request.startline["uri"];
@@ -33,7 +33,7 @@ bool	Response::set_location_in_request(Request &request, Context *context)
 	{
 		if (path == location[i]->get_args()[0] && "location" == location[i]->get_name())
 		{
-			check_index_or_redirection(request, location[i]);
+			check_index_or_redirection(request, location[i], root);
 			return (true);
 		}
 	}
@@ -47,23 +47,22 @@ void	Response::set_root_index_path(Request &request, Context *context)
 	std::string request_path = request.startline["uri"];
 	size_t pos_query;
 
-	if (root.back() != '/')
-		root += '/';
+	if (request_path.front() != '/')
+		request_path.insert(0, "/");
 	pos_query = request_path.find("?");
 	if (pos_query != std::string::npos)
 	{
 		this->path = root + request_path.substr(0, pos_query);
 		this->query = request_path.substr(pos_query + 1, request_path.size());
 	}
-	this->path = root;
-	if (set_location_in_request(request, context))
+	else if (set_location_in_request(request, context, root))
 		;
-	else
-		this->path += request_path;
-	this->query = "";
+	else if (!this->path.empty())
+		this->path = root + request_path;
 	#ifdef DEBUG
 		std::cout << DARK_BLUE << "================Set_root_index_path=================" << std::endl;
 		std::cout << "Raw was -> Root in directive : " << root << " request_path : " << request_path << std::endl;
-		std::cout << "After process -> Path : " << this->path << ", Query : " << this->query << RESET << std::endl; 
+		std::cout << "After process -> Path : " << this->path << ", Query : " << this->query << std::endl; 
+		std::cout << "status code : " << this->status_code << RESET << std::endl;
 	#endif
 }

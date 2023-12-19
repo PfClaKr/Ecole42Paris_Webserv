@@ -56,16 +56,16 @@ int parse_https_request_header(Request &request, std::string headerline)
 		return 1;
 	key = headerline.substr(last, next - last);
 	transform(key.begin(), key.end(), key.begin(), ::tolower);
-	if (key.find(' ') != std::string::npos)
-		return 1;
+	// if (key.find(' ') != std::string::npos)
+	// 	return 1;
 	last = next + 1;
-	next = headerline.find(delim, last);
-	if (next != std::string::npos)
-		return 1;
+	next = headerline.find(delim, last); //Host: localhost:8080
+	// if (next != std::string::npos)
+		// return 1;
 	val = headerline.substr(last, next - last);
 	str_trim(val);
-	if (val.find(' ') != std::string::npos)
-		return 1;
+	// if (val.find(' ') != std::string::npos)
+	// 	return 1;
 	transform(val.begin(), val.end(), val.begin(), ::tolower);
 	request.header[key] = val;
 	return 0;
