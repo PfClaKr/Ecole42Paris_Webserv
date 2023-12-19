@@ -8,7 +8,11 @@
 int main()
 {
 	Context c;
-	parse_config(c, "src/config/default.conf");
+	if (parse_config(c, "src/config/default.conf") == -1)
+	{
+		std::cerr << "parse error: check config file\n";
+		return 1;
+	}
 	std::vector<Context *> servers = get_context_by_name(c, "server");
 //	print_servers(servers);
 
