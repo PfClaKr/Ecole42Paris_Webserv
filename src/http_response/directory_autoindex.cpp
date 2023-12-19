@@ -14,6 +14,10 @@ void	Response::directory_autoindex()
 	}
 	else
 	{
+		#ifdef DEBUG
+			std::cout << DARK_BLUE << "=================Auto index================" << std::endl;
+			std::cout << "this->path : " << this->path << RESET << std::endl;
+		#endif
 		body_tmp += "<h1>Index of " + this->path + "<h1>\n";
 		while ((dir_content = readdir(dir)) != NULL)
 		{
@@ -25,10 +29,10 @@ void	Response::directory_autoindex()
 					if (S_ISDIR(fileinfo.st_mode))
 					{
 						tmp += "/";
-						body_tmp += "\t\t<a href=\"" + this->path + tmp + "\">" + tmp + "</a>";
+						body_tmp += "\t\t<a href=\"" + tmp + "\">" + tmp + "</a>";
 					}
 					else
-						body_tmp += "\t\t<a href=\"" + this->path + tmp + "\">" + tmp + "</a>";
+						body_tmp += "\t\t<a href=\"" + tmp + "\">" + tmp + "</a>";
 				}
 			}
 		}

@@ -135,14 +135,8 @@ std::string	Cgi::init_cgi(Request &request, Context *context, Response *response
 {
 	#ifdef DEBUG
 		std::cout << DARK_BLUE << "==============CGI===============" << RESET << std::endl;
-		std::cout << DARK_BLUE << "==============CGI===============" << RESET << std::endl;
-		std::cout << DARK_BLUE << "==============CGI===============" << RESET << std::endl;
-		std::cout << DARK_BLUE << "==============CGI===============" << RESET << std::endl;
-		std::cout << DARK_BLUE << "==============CGI===============" << RESET << std::endl;
-		std::cout << DARK_BLUE << "==============CGI===============" << RESET << std::endl;
 	#endif
 	set_cgi_meta_variable(request, context, response->get_path(), response->get_query());
-	std::cerr << RED << "WHAT?\n" << RESET;
 	set_cgi_path(response->get_path(), context);
 	run_cgi(request);
 	return (set_output_in_response_body());

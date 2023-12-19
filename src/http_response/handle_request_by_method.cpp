@@ -26,6 +26,7 @@ void	Response::handle_get_method(Request &request, Context *context)
 	bool is_autoindex = autoindex == "on" ? true : false;
 	#ifdef DEBUG
 		std::cout << DARK_BLUE << "============handle GET method===============" << std::endl;
+		std::cout << "path : " << this->path << std::endl;
 		std::cout << "Is_dir , Is_php, Is autoindex : " << is_dir << " | " << is_php << " | " << is_autoindex << RESET <<std::endl;
 	#endif
 

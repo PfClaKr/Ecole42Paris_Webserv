@@ -56,8 +56,10 @@ void	Response::set_root_index_path(Request &request, Context *context)
 		this->query = request_path.substr(pos_query + 1, request_path.size());
 	}
 	else if (set_location_in_request(request, context, root))
+	{
 		;
-	else if (!this->path.empty())
+	}
+	if (this->path.empty())
 		this->path = root + request_path;
 	#ifdef DEBUG
 		std::cout << DARK_BLUE << "================Set_root_index_path=================" << std::endl;
