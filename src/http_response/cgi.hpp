@@ -38,7 +38,7 @@ class Cgi
 			SERVER_SOFTWARE,
 			LEN_OF_ENUM
 		};
-		char *env[LEN_OF_ENUM];
+		char **env;
 		std::string output;
 		std::string path;
 		std::string file;
