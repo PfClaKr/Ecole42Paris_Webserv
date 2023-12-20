@@ -27,16 +27,17 @@ void	Response::check_index_or_redirection(Request &request, Context *context, st
 bool	Response::set_location_in_request(Request &request, Context *context, std::string root)
 {
 	std::vector<Context *> location = context->get_child();
-	std::string path = request.startline["uri"];
 
 	for (unsigned long i = 0; i < location.size(); i++)
 	{
-		if (path == location[i]->get_args()[0] && "location" == location[i]->get_name())
+		if (this->path == location[i]->get_args().front() && "location" == location[i]->get_name())
 		{
 			check_index_or_redirection(request, location[i], root);
 			return (true);
 		}
 	}
+	if (this->path.find(".php") != std::string::npos)
+		return (true);
 	return (false);
 }
 
@@ -52,15 +53,13 @@ void	Response::set_root_index_path(Request &request, Context *context)
 	pos_query = request_path.find("?");
 	if (pos_query != std::string::npos)
 	{
-		this->path = root + request_path.substr(0, pos_query);
+		this->path = request_path.substr(0, pos_query);
 		this->query = request_path.substr(pos_query + 1, request_path.size());
 	}
-	else if (set_location_in_request(request, context, root))
-	{
-		;
-	}
-	if (this->path.empty())
-		this->path = root + request_path;
+	else
+		this->path = request_path;
+	if (!set_location_in_request(request, context, root))
+		this->path = root + this->path;
 	#ifdef DEBUG
 		std::cout << DARK_BLUE << "================Set_root_index_path=================" << std::endl;
 		std::cout << "Raw was -> Root in directive : " << root << " request_path : " << request_path << std::endl;

@@ -15,6 +15,11 @@ std::string Response::get_ready_to_send()
 	return (this->ready_to_send);
 }
 
+std::string Response::get_upload_file_name()
+{
+	return (this->upload_file_name);
+}
+
 void Response::set_header(std::string header, std::string value)
 {
 	this->header[header] = value;
@@ -29,9 +34,9 @@ int	Response::check_host_in_header(Request &request)
 		#ifdef DEBUG
 			std::cout << DARK_BLUE << "Error with no host in request integrity check" << RESET << std::endl;
 		#endif
-		return -1;
+		return false;
 	}
-	return 0;
+	return true;
 }
 
 bool	Response::process_unchunk(Request &request)
@@ -40,17 +45,19 @@ bool	Response::process_unchunk(Request &request)
 		return true;
 	if (request.header["transfer-encoding"].compare("chunked") == 0)
 	{
+		std::cout << "inside chunked function\n";
 		size_t next = 0, last = 0;
 		std::string delim = "\r\n";
 		std::string tmp, data;
 		size_t len = 0;
-		std::stringstream ss;
 		std::string result;
 		while ((next = request.body.find(delim, last)) != std::string::npos)
 		{
 			tmp = request.body.substr(last, next - last);
+			std::stringstream ss;
 			ss << tmp;
-			ss >> std::hex >> len;
+			ss >> std::hex >> len >> std::dec;
+			std::cout << std::dec;
 			if (len == 0)
 			{
 				request.body = result;
@@ -88,7 +95,7 @@ bool	Response::process_unchunk(Request &request)
 
 int	Response::check_body_size(Request &request, Context *context)
 {
-	int	content_length = std::atoi(request.header["content_length"].c_str());
+	int	content_length = std::atoi(request.header["content-length"].c_str());
 	int max_body_size = std::atoi(context->get_directive_by_key("client_max_body_size")[0].c_str());
 	int request_body_size = request.body.size();
 
@@ -98,7 +105,7 @@ int	Response::check_body_size(Request &request, Context *context)
 		#ifdef DEBUG
 			std::cout << DARK_BLUE << "Error with body_size big then Header in request integrity check" << RESET << std::endl;
 		#endif
-		return -1;
+		return false;
 	}
 	if (request_body_size > max_body_size)
 	{
@@ -106,9 +113,9 @@ int	Response::check_body_size(Request &request, Context *context)
 		#ifdef DEBUG
 			std::cout << DARK_BLUE << "Error with body_size big then config max size in request integrity check" << RESET << std::endl;
 		#endif
-		return -1;
+		return false;
 	}
-	return 0;
+	return true;
 }
 
 int	Response::check_method_allow(Request &request, Context *context)
@@ -119,13 +126,13 @@ int	Response::check_method_allow(Request &request, Context *context)
 	for (unsigned long i = 0; i < allowed_method.size(); i++)
 	{
 		if (allowed_method[i] == request_method)
-			return 0;
+			return true;
 	}
 	this->status_code = METHOD_NOT_ALLOWED;
 	#ifdef DEBUG
 		std::cout << DARK_BLUE << "Error with not allowed in request integrity check" << RESET << std::endl;
 	#endif
-	return -1;
+	return false;
 }
 
 int	Response::check_request_uri(Request &request, Context *context)
@@ -137,9 +144,9 @@ int	Response::check_request_uri(Request &request, Context *context)
 		#ifdef DEBUG
 			std::cout << DARK_BLUE << "Error with uri in request integrity check" << RESET << std::endl;
 		#endif
-		return -1;
+		return false;
 	}
-	return 0;
+	return true;
 }
 
 int	Response::check_integrity_request(std::pair<Request, Context *> &response_set)
@@ -148,8 +155,8 @@ int	Response::check_integrity_request(std::pair<Request, Context *> &response_se
 		|| !check_body_size(response_set.first, response_set.second)
 		|| !check_method_allow(response_set.first, response_set.second)
 		|| !check_request_uri(response_set.first, response_set.second))
-		return -1;
-	return 0;
+		return false;
+	return true;
 }
 
 void Response::set_response_error_page()
@@ -203,7 +210,7 @@ void	Response::set_response(Request &request)
 		os << "Connection: keep-alive\r\n";
 	else
 		os << "Connection: close\r\n";
-	if (default_error_page.find(status_code) != default_error_page.end() && !body.first.empty())
+	if (default_error_page.find(status_code) != default_error_page.end() && status_code != 302)
 		set_response_error_page();
 	else if (status_code >= 300)
 	{
@@ -244,7 +251,7 @@ void	Response::set_default_error_page(Context *context)
 			#ifdef DEBUG
 				std::cout << DARK_BLUE << "==============Set default error page============" << std::endl;
 				std::cout << "Raw was :" << tmp.first << " " << tmp.second.front() << std::endl;
-				std::cout << new_tmp << " : " << tmp.second.front() << RESET << std::endl;
+				std::cout << new_tmp << " : " << this->default_error_page[std::atoi(new_tmp.c_str())] << RESET << std::endl;
 			#endif
 		}
 	}

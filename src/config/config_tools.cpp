@@ -126,6 +126,9 @@ static int server_integrity_check(const Context &config)
 static int location_integrity_check(const Context &config)
 {
 	std::map<std::string, std::vector<std::string> > dir = config.get_directive();
+	if (dir.count("cgi_extention") != 0)
+		if (dir["cgi_extention"].front().compare(".php") != 0)
+			return -1;
 	if (dir.count("index") + dir.count("return") != 1 && dir.count("cgi_path") + dir.count("cgi_extention") == 0)
 		return -1;
 	if (dir.count("index") + dir.count("return") == 0 && dir.count("cgi_path") + dir.count("cgi_extention") != 2)

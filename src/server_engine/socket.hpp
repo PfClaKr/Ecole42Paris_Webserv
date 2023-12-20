@@ -32,7 +32,6 @@ class Socket
 		Socket(const Socket &ref);
 		~Socket();
 		void init_socket(std::string host, std::string port);
-
 		int	get_fd();
 
 		class SocketException : public std::exception

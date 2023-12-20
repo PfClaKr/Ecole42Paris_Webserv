@@ -54,13 +54,6 @@ public:
 			delete child[i];
 		}
 	};
-	// class FatalErrorException : public std::exception
-	// {
-	// 	virtual const char* what() const throw()
-	// 	{
-	// 		return "Fatal Error";
-	// 	}
-	// };
 };
 
 #endif

@@ -5,38 +5,44 @@
 #include "http_response/response.hpp"
 #include "http_request/request.hpp"
 
-int main()
+int main(int argc, char **argv)
 {
+	#ifdef DEBUG
+		std::cout << DARK_BLUE << "-------------DEBUG MODE-------------" << RESET << std::endl;
+	#endif
+	std::string conf;
+	if (argc == 1)
+		conf = "src/config/default.conf";
+	else if (argc == 2)
+		conf = argv[1];
+	else
+		return 1;
 	Context c;
-	if (parse_config(c, "src/config/default.conf") == -1)
+	if (parse_config(c, conf) == -1)
 	{
 		std::cerr << "parse error: check config file\n";
 		return 1;
 	}
+	Server s;
+	std::vector<Socket> sockets;
 	std::vector<Context *> servers = get_context_by_name(c, "server");
-//	print_servers(servers);
-
-	#ifdef DEBUG
-		std::cout << DARK_BLUE << "-------------DEBUG MODE-------------" << RESET << std::endl;
-	#endif
-
-	Socket s1,s2;
 	try
 	{
-	 	s1.init_socket("0.0.0.0", "8080"); // <- c2 = s1
-	 	s2.init_socket("0.0.0.0", "9090");
-		// s1.init_socket(servers[0]->get_directive_by_key("host")[0], servers[0]->get_directive_by_key("listen")[0]);
-		// s2.init_socket(servers[1]->get_directive_by_key("host")[0], servers[1]->get_directive_by_key("listen")[0]);
+		for (size_t i = 0; i < servers.size(); i++)
+		{
+			Socket so;
+			so.init_socket(servers[i]->get_directive_by_key("host").front(), servers[i]->get_directive_by_key("listen").front());
+			sockets.push_back(so);
+			s.set_server_set(sockets[i], servers[i]);
+		}
 	}
-	catch (Socket::SocketException &e)
+	catch(Socket::SocketException& e)
 	{
-		std::cerr << e.what() << std::endl;
-		return (-1);
+		std::cerr << e.what() << '\n';
+		return -1;
 	}
-	Server s;
-	//check multiple port
-	s.set_server_set(s1, servers[0]);
-	s.set_server_set(s2, servers[1]);
 	s.init_server();
+	for (size_t i = 0; i < sockets.size(); i++)
+		close(sockets[i].get_fd());
 	return (0);
 }

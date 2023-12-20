@@ -66,10 +66,15 @@ void	Response::handle_get_method(Request &request, Context *context)
 		body.second.clear();
 	}
 	else if (file.good() && is_dir && is_autoindex)
+	{
 		directory_autoindex();
+		file.close();
+		return ;
+	}
 	else if (is_dir)
 	{
 		this->status_code = NOT_FOUND;
+		file.close();
 		return ;
 	}
 	else
@@ -101,7 +106,6 @@ void	Response::handle_post_method(Request &request, Context *context)
 			std::cout << DARK_BLUE << "php.file path change : " << "path: " << this->path << RESET << "\n";
 		#endif
 	}
-
 	file.open(this->path.c_str(), std::ios::in);
 	if (is_dir)
 	{
@@ -117,7 +121,6 @@ void	Response::handle_post_method(Request &request, Context *context)
 		}
 		catch (Cgi::CgiException())
 		{
-			std::cout << RED << "!!!" << RESET << std::endl;
 			this->status_code = INTERNAL_SERVER_ERROR;
 			file.close();
 		}

@@ -7,7 +7,7 @@ void	Response::directory_autoindex()
 	struct stat fileinfo;
 	std::string body_tmp;
 
-	if (!(dir = opendir(this->path.c_str())))
+	if (!(dir = opendir(this->path.c_str())) || this->path.find("//") != std::string::npos)
 	{
 		this->status_code = NOT_FOUND;
 		return ;
@@ -40,4 +40,5 @@ void	Response::directory_autoindex()
 	closedir(dir);
 	body.first = body_tmp;
 	body.second = "text/html";
+	this->status_code = OK;
 }

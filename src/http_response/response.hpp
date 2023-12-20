@@ -55,6 +55,7 @@ class Response
 		std::string get_query();
 		std::string get_status_line(int status);
 		std::string get_ready_to_send();
+		std::string get_upload_file_name();
 		void set_header(std::string header, std::string value);
 
 		class parsingException : public std::exception

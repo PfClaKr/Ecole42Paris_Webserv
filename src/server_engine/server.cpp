@@ -1,5 +1,14 @@
 #include "server.hpp"
 
+int is_up;
+
+void signal_handler(int signum)
+{
+	(void)signum;
+	std::cout << "\b\bServer is time to go bed Zzz..." << std::endl;
+	is_up = false;
+}
+
 void	add_fd_in_epoll(int epoll_fd, int fd, uint32_t opt)
 {
 	struct epoll_event epoll_ev;
@@ -220,17 +229,21 @@ void	Server::handle_epoll_events(int event_fd, epoll_event *epoll_ev)
 
 void	Server::init_epoll_wait()
 {
-	this->is_up = true;
+	is_up = true;
 	int ev_count;
 	struct epoll_event epoll_ev[MAX_EVENTS];
 
 	memset(&epoll_ev, 0, sizeof(epoll_ev));
+	signal(SIGINT, signal_handler);
 	while (is_up)
 	{
+		if (is_up == false)
+			break;
 		ev_count = epoll_wait(this->epoll_fd, epoll_ev, this->server_set.size(), -1);
 		for (int i = 0; i < ev_count && is_up; i++)
 			this->handle_epoll_events(epoll_ev[i].data.fd, &epoll_ev[i]);
 	}
+	close(epoll_fd);
 }
 
 int Server::init_server()

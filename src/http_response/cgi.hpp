@@ -37,12 +37,17 @@ class Cgi
 			SERVER_PORT,
 			SERVER_PROTOCOL,
 			SERVER_SOFTWARE,
+			UPLOAD_ERROR,
+			FILENAME,
 			LEN_OF_ENUM
 		};
 		char **env;
 		std::string output;
+		std::string save_path;
+		std::string upload_file_name;
 		std::string path;
 		std::string file;
+		std::string	status_upload;
 
 		void set_cgi_meta_variable(Request &request, Context *context, std::string file, std::string query);
 		void set_cgi_path(std::string file, Context *context);
@@ -53,6 +58,7 @@ class Cgi
 		Cgi();
 		~Cgi();
 		std::string init_cgi(Request &request, Context *context, Response *response);
+		void	upload_file(std::string upload_file, std::string request_body);
 
 		class CgiException : public std::exception
 		{

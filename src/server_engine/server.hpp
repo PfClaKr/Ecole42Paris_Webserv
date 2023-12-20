@@ -7,6 +7,8 @@
 #include "../http_request/request.hpp"
 #include "../http_response/response.hpp"
 
+extern int is_up;
+
 class Server
 {
 	private:
@@ -30,7 +32,6 @@ class Server
 	public:
 		Server();
 		~Server();
-		int	is_up;
 		void set_server_set(Socket s, Context *c);
 		int		init_server();
 
