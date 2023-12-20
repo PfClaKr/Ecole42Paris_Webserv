@@ -251,15 +251,8 @@ int Server::init_server()
 	#ifdef DEBUG
 		std::cout << DARK_BLUE << "----------init-server----------" << std::endl;
 	#endif
-	try
-	{
-		this->init_epoll();
-		this->init_epoll_wait();
-	}
-	catch (std::exception())
-	{
-		return -1;
-	}
+	this->init_epoll();
+	this->init_epoll_wait();
 	return 0;
 }
 

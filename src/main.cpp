@@ -26,6 +26,18 @@ int main(int argc, char **argv)
 	Server s;
 	std::vector<Socket> sockets;
 	std::vector<Context *> servers = get_context_by_name(c, "server");
+	std::vector<std::string> listen;
+	for (size_t i = 0; i < servers.size(); i++)
+	{
+		listen.push_back(servers[i]->get_directive_by_key("listen").front());
+	}
+	std::sort(listen.begin(), listen.end());
+	std::unique(listen.begin(), listen.end());
+	for (size_t i = 0; i < listen.size() - 1; i++)
+	{
+		if (listen[i] >= listen[i + 1])
+			return -1;
+	}
 	try
 	{
 		for (size_t i = 0; i < servers.size(); i++)
@@ -35,13 +47,27 @@ int main(int argc, char **argv)
 			sockets.push_back(so);
 			s.set_server_set(sockets[i], servers[i]);
 		}
+		s.init_server();
 	}
 	catch(Socket::SocketException& e)
 	{
 		std::cerr << e.what() << '\n';
+		for (size_t i = 0; i < sockets.size(); i++)
+			close(sockets[i].get_fd());
 		return -1;
 	}
-	s.init_server();
+	catch (std::exception())
+	{
+		for (size_t i = 0; i < sockets.size(); i++)
+			close(sockets[i].get_fd());
+		return -1;
+	}
+	catch (Server::epollException())
+	{
+		for (size_t i = 0; i < sockets.size(); i++)
+			close(sockets[i].get_fd());
+		return -1;
+	}
 	for (size_t i = 0; i < sockets.size(); i++)
 		close(sockets[i].get_fd());
 	return (0);
