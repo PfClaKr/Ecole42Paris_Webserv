@@ -62,7 +62,6 @@ void	Response::handle_get_method(Request &request, Context *context)
 			file.close();
 			return ;
 		}
-		header["content-length"] = body_cgi.size();
 		body.first.clear();
 		body.second.clear();
 	}
@@ -111,7 +110,6 @@ void	Response::handle_post_method(Request &request, Context *context)
 			file.close();
 			return ;
 		}
-		header["Content-Length"] = body_cgi.size();
 		body.first.clear();
 		body.second.clear();
 	}
@@ -120,10 +118,8 @@ void	Response::handle_post_method(Request &request, Context *context)
 	file.close();
 }
 
-void	Response::handle_delete_method(Request &request, Context *context)
+void	Response::handle_delete_method(Request &request)
 {
-	(void) request;
-	(void) context; //?
 	std::ifstream file(this->path.c_str());
 
 	bool is_dir = file.good() && !file.rdbuf()->in_avail();
@@ -141,7 +137,7 @@ void	Response::handle_delete_method(Request &request, Context *context)
 		this->status_code = NOT_FOUND;
 	else
 		this->status_code = FORBIDDEN;
-	set_response();
+	set_response(request);
 }
 
 void	Response::handle_request_by_method(Request &request, Context *context)
@@ -155,7 +151,7 @@ void	Response::handle_request_by_method(Request &request, Context *context)
 			handle_post_method(request, context);
 			break;
 		case 'D' :
-			handle_delete_method(request, context);
+			handle_delete_method(request);
 			break;
 	}
 }

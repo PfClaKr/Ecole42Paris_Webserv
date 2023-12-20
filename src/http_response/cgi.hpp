@@ -32,6 +32,7 @@ class Cgi
 			REMOTE_USER,
 			REQUEST_METHOD,
 			SCRIPT_FILENAME,
+			SCRIPT_NAME,
 			SERVER_NAME,
 			SERVER_PORT,
 			SERVER_PROTOCOL,
@@ -46,7 +47,7 @@ class Cgi
 		void set_cgi_meta_variable(Request &request, Context *context, std::string file, std::string query);
 		void set_cgi_path(std::string file, Context *context);
 		void run_cgi(Request &request);
-		std::string set_output_in_response_body();
+		std::string set_output_in_response_body(Response *response);
 		Cgi(const Cgi &ref);
 	public:
 		Cgi();

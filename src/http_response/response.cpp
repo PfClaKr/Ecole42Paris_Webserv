@@ -15,6 +15,11 @@ std::string Response::get_ready_to_send()
 	return (this->ready_to_send);
 }
 
+void Response::set_header(std::string header, std::string value)
+{
+	this->header[header] = value;
+}
+
 int	Response::check_host_in_header(Request &request)
 {
 	std::string host = request.header["host"];
@@ -117,12 +122,13 @@ void Response::set_response_error_page()
 	#endif
 }
 
-void	Response::set_response()
+void	Response::set_response(Request &request)
 {
 	std::ostringstream os;
 	time_t clock = time(0);
 	char *clock_to_char = ctime(&clock);
 	std::string status_line = get_status_line(this->status_code);
+	bool keep_alive = "keep-alive" == request.header["connection"] ? true : false;
 	#ifdef DEBUG
 		std::cout << DARK_BLUE << "==============Set response===============" << std::endl;
 		std::cout << "Status code : " << status_code << std::endl;
@@ -141,8 +147,10 @@ void	Response::set_response()
 	os << "Date: " << clock_to_char;
 	for (std::map<std::string, std::string>::iterator it = this->header.begin(); it != this->header.end(); it++)
 		os << it->first << ": " << it->second << "\r\n";
-	if (header.find("Connection") == header.end())
+	if (keep_alive)
 		os << "Connection: keep-alive\r\n";
+	else
+		os << "Connection: close\r\n";
 	if (default_error_page.find(status_code) != default_error_page.end() && !body.first.empty())
 		set_response_error_page();
 	else if (status_code >= 300)
@@ -156,7 +164,7 @@ void	Response::set_response()
 		os << body.first;
 	}
 	else if (body_cgi.size())
-		os << body_cgi;
+		os << "\r\n" << body_cgi;
 	else
 	{
 		os << "Content-Length: 0\r\n";
@@ -195,7 +203,7 @@ void	Response::make_error_response(Response &response, std::pair<Request, Contex
 	(void) response;
 	set_default_error_page(response_set.second);
 	this->status_code = status_code;
-	set_response();
+	set_response(response_set.first);
 }
 
 void	Response::make_http_response(Response &response, std::pair<Request, Context *> &response_set)
@@ -205,22 +213,22 @@ void	Response::make_http_response(Response &response, std::pair<Request, Context
 	{
 		set_default_error_page(response_set.second);
 		if (!check_integrity_request(response_set))
-			return (set_response());
+			return (set_response(response_set.first));
 		set_root_index_path(response_set.first, response_set.second);
 		if (status_code > 0)
-			return (set_response());
+			return (set_response(response_set.first));
 		handle_request_by_method(response_set.first, response_set.second);
-		set_response();
+		set_response(response_set.first);
 	}
 	catch (std::exception &e)
 	{
 		this->status_code = INTERNAL_SERVER_ERROR;
-		set_response();
+		set_response(response_set.first);
 	}
 	catch (Response::parsingException())
 	{
 		this->status_code = INTERNAL_SERVER_ERROR;
-		set_response();
+		set_response(response_set.first);
 	}
 }
 

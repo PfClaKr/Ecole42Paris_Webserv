@@ -157,8 +157,8 @@ void	Server::send_response(Response &response, int fd)
 
 int	Server::is_keep_alive()
 {
-	std::string config = this->response_set.first.header["Connection"];
-	if (config == "keep alive")
+	std::string config = this->response_set.first.header["connection"];
+	if (config == "keep-alive")
 		return (true);
 	return (false);
 }

@@ -34,14 +34,15 @@ void	Cgi::set_cgi_meta_variable(Request &request, Context *context, std::string 
 	this->env[REMOTE_USER] = strdup("REMOTE_USER=user_name");
 	this->env[REQUEST_METHOD] = strdup(("REQUEST_METHOD=" + request.startline["method"]).c_str());
 	this->env[SCRIPT_FILENAME] = strdup(("SCRIPT_FILENAME=" + file).c_str());
+	this->env[SCRIPT_NAME] = strdup(("SCRIPT_FILENAME=" + file).c_str());
 	this->env[SERVER_NAME] = strdup("SERVER_NAME=ychunschae");
 	this->env[SERVER_PORT] = strdup(("SERVER_PORT=" + context->get_directive_by_key("listen")[0]).c_str());
 	this->env[SERVER_PROTOCOL] = strdup(("SERVER_PROTOCOL=" + request.startline["http_version"]).c_str());
 	this->env[SERVER_SOFTWARE] = strdup("SERVER_SOFTWARE=Nginx/2.0");
 	this->env[LEN_OF_ENUM] = NULL;
-	// std::cout << RED << "env set\n" << RESET;
-	// for (int i = 0; i < LEN_OF_ENUM; i++)
-	// 	std::cout << this->env[i] << std::endl;
+	std::cout << RED << "env set\n" << RESET;
+	for (int i = 0; i < LEN_OF_ENUM; i++)
+	std::cout << this->env[i] << std::endl;
 }
 
 void	Cgi::run_cgi(Request &request)
@@ -129,13 +130,21 @@ void	Cgi::set_cgi_path(std::string file, Context *context)
 	throw Cgi::CgiException();
 }
 
-std::string	Cgi::set_output_in_response_body()
+std::string	Cgi::set_output_in_response_body(Response *response)
 {
 	if (this->output.size() > 0)
+	{
+		std::stringstream ss;
+		ss << this->output.size();
+		std::string ret = ss.str();
+		response->set_header("Content-Length", ret);
 		return ((this->output.substr(output.find("\r") + 4)));
+	}
 	else
+	{
+		response->set_header("Content_Length", "9");
 		return ("No output");
-	
+	}
 }
 
 std::string	Cgi::init_cgi(Request &request, Context *context, Response *response)
@@ -146,7 +155,7 @@ std::string	Cgi::init_cgi(Request &request, Context *context, Response *response
 	set_cgi_meta_variable(request, context, response->get_path(), response->get_query());
 	set_cgi_path(response->get_path(), context);
 	run_cgi(request);
-	return (set_output_in_response_body());
+	return (set_output_in_response_body(response));
 }
 
 Cgi::Cgi()

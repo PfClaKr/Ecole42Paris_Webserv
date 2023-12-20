@@ -36,9 +36,9 @@ class Response
 		void handle_request_by_method(Request &request, Context *context);
 		void handle_get_method(Request &request, Context *context);
 		void handle_post_method(Request &request, Context *context);
-		void handle_delete_method(Request &request, Context *context);
+		void handle_delete_method(Request &request);
 		void directory_autoindex();
-		void set_response();
+		void set_response(Request &request);
 		void set_default_error_page(Context *context);
 		void set_response_error_page();
 		Response(const Response &ref);
@@ -51,6 +51,7 @@ class Response
 		std::string get_query();
 		std::string get_status_line(int status);
 		std::string get_ready_to_send();
+		void set_header(std::string header, std::string value);
 
 		class parsingException : public std::exception
 		{
