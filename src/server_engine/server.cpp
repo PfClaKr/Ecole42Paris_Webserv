@@ -13,7 +13,7 @@ void	add_fd_in_epoll(int epoll_fd, int fd, uint32_t opt)
 	}
 }
 
-int find_pair_by_key(std::vector<std::pair<Socket, Context *>> &pair, int &key)
+int find_pair_by_key(std::vector<std::pair<Socket, Context *> > &pair, int &key)
 {
 	for (unsigned long i = 0; i < pair.size(); i++)
 	{

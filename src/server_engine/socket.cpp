@@ -4,7 +4,7 @@ void	Socket::init_socket_address(std::string host, std::string port)
 {
 	addr.sin_family = AF_INET;
 	addr.sin_addr.s_addr = inet_addr(host.c_str());
-	addr.sin_port = htons(stoi(port));
+	addr.sin_port = htons(std::atoi(port.c_str()));
 	memset(addr.sin_zero, '\0', sizeof(addr.sin_zero));
 }
 

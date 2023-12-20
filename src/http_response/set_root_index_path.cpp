@@ -18,7 +18,7 @@ void	Response::check_index_or_redirection(Request &request, Context *context, st
 	else if (args.first == "index")
 	{
 		std::string location_path = context->get_args().front();
-		if (location_path.back() != '/')
+		if (location_path[location_path.length() - 1] != '/')
 			location_path += '/';
 		this->path = root + location_path + args.second.front();
 	}
@@ -47,7 +47,7 @@ void	Response::set_root_index_path(Request &request, Context *context)
 	std::string request_path = request.startline["uri"];
 	size_t pos_query;
 
-	if (request_path.front() != '/')
+	if (request_path[0] != '/')
 		request_path.insert(0, "/");
 	pos_query = request_path.find("?");
 	if (pos_query != std::string::npos)

@@ -24,8 +24,8 @@ OBJS_DEBUG = $(SRCS:%.cpp=$(OBJDIR_DEBUG)/%.o)
 
 RM = rm -rf
 
-CC = c++
-CXX_FLAGS = -Wextra -Wall -Werror
+CC = g++
+CXX_FLAGS = -Wextra -Wall -Werror -std=c++98 -gdwarf-5
 HEAD = -I includes
 
 ${OBJDIR}/%.o : %.cpp | $(OBJDIR)

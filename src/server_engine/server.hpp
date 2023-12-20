@@ -12,7 +12,7 @@ class Server
 	private:
 		bool	split_request;
 		int epoll_fd;
-		std::vector<std::pair<Socket, Context *>> server_set;
+		std::vector<std::pair<Socket, Context *> > server_set;
 		std::map<int, Context *> request_set;
 		std::pair<Request, Context *> response_set;
 		int		accept_new_connection(int event_fd);
@@ -36,8 +36,8 @@ class Server
 
 
 		int		get_epoll_fd();
-		std::vector<std::pair<Socket, Context *>> get_server_set();
-		std::map<int, std::pair<Socket, Context *>> get_request_set();
+		std::vector<std::pair<Socket, Context *> > get_server_set();
+		std::map<int, std::pair<Socket, Context *> > get_request_set();
 
 		class epollException : public std::exception
 		{

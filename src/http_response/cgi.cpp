@@ -40,14 +40,10 @@ void	Cgi::set_cgi_meta_variable(Request &request, Context *context, std::string 
 	this->env[SERVER_PROTOCOL] = strdup(("SERVER_PROTOCOL=" + request.startline["http_version"]).c_str());
 	this->env[SERVER_SOFTWARE] = strdup("SERVER_SOFTWARE=Nginx/2.0");
 	this->env[LEN_OF_ENUM] = NULL;
-	std::cout << RED << "env set\n" << RESET;
-	for (int i = 0; i < LEN_OF_ENUM; i++)
-	std::cout << this->env[i] << std::endl;
 }
 
 void	Cgi::run_cgi(Request &request)
 {
-	std::cout << RED << "inside run cgi function: " << __LINE__ << "\n" << RESET;
 	int fd[2];
 	char ret[100000];
 
@@ -62,14 +58,10 @@ void	Cgi::run_cgi(Request &request)
 	if (lseek(fd_in, 0, SEEK_SET) == -1)
 		throw Cgi::CgiException();
 
-	std::cout << RED << "after pipe write lseek functions: " << __LINE__ << "\n" << RESET;
 	char **argv = new char*[3];
 	argv[0] = strdup(this->path.c_str());
 	argv[1] = strdup(this->file.c_str());
 	argv[2] = NULL;
-	std::cout << RED << "argv[0]: " << argv[0] << std::endl;
-	std::cout << "argv[1]: " << argv[1] << RESET << std::endl;
-	std::cout << RED << "step before fork: " << __LINE__ << RESET << std::endl;
 	int pid = fork();
 	if (pid == 0)
 	{
@@ -83,7 +75,6 @@ void	Cgi::run_cgi(Request &request)
 	}
 	else
 	{
-		// wait(NULL);
 		waitpid(pid, NULL, -1);
 		if (close(fd[1]) == -1)
 			throw Cgi::CgiException();
@@ -100,11 +91,10 @@ void	Cgi::run_cgi(Request &request)
 		fclose(file_in);
 		close(fd_in);
 		close(cp_stdin);
-		// for (int i = 0; i < 3; i++)
-		// 	delete[] argv[i];
-		// delete[] argv;
 	}
-	std::cout << RED << "end of run cgi function: " << __LINE__ << RESET << std::endl;
+	for (int i = 0; i < 3; i++)
+		delete[] argv[i];
+	delete[] argv;
 }
 
 void	Cgi::set_cgi_path(std::string file, Context *context)
@@ -155,6 +145,9 @@ std::string	Cgi::init_cgi(Request &request, Context *context, Response *response
 	set_cgi_meta_variable(request, context, response->get_path(), response->get_query());
 	set_cgi_path(response->get_path(), context);
 	run_cgi(request);
+	// for (int i = 0; this->env[i]; i++)
+	// 	delete[] this->env[i];
+	// delete[] env;
 	return (set_output_in_response_body(response));
 }
 
@@ -169,7 +162,4 @@ Cgi::Cgi(const Cgi &ref)
 
 Cgi::~Cgi()
 {
-	// for (int i = 0; i < LEN_OF_ENUM; i++)
-	// 	delete[] env[i];
-	// delete[] env;
 }

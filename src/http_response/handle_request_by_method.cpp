@@ -18,7 +18,7 @@ void	Response::handle_get_method(Request &request, Context *context)
 {
 	Cgi cgi;
 	std::fstream file;
-	bool is_dir = this->path.back() == '/';
+	bool is_dir = this->path[this->path.length() - 1] == '/';
 	bool is_php = check_is_php(this->path);
 	const Context *http = context->get_parent();
 	std::string autoindex = http->get_directive_by_key("autoindex").front();
@@ -89,7 +89,7 @@ void	Response::handle_post_method(Request &request, Context *context)
 {
 	Cgi cgi;
 	std::fstream file;
-	bool is_dir = this->path.back() == '/';
+	bool is_dir = this->path[this->path.length() - 1] == '/';
 
 	file.open(this->path.c_str(), std::ios::in);
 	if (is_dir)
@@ -142,7 +142,7 @@ void	Response::handle_delete_method(Request &request)
 
 void	Response::handle_request_by_method(Request &request, Context *context)
 {
-	switch (request.startline["method"].front())
+	switch (request.startline["method"][0])
 	{
 		case 'G' :
 			handle_get_method(request, context);

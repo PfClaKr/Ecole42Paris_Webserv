@@ -90,7 +90,7 @@ void print_http_request(Request &request)
 		std::cout << (*it).first << ": " << (*it).second << "\n";
 	std::cout << "====================BODY======================\n";
 	std::cout << request.body;
-	std::cout << "==============================================\n" << RESET;
+	std::cout << "==============================================" << RESET << "\n";
 }
 
 void	Request::clear_value()

@@ -79,7 +79,7 @@ int	Response::check_method_allow(Request &request, Context *context)
 int	Response::check_request_uri(Request &request, Context *context)
 {
 	(void) context;
-	if (request.startline["uri"].front() != '/')
+	if (request.startline["uri"][0] != '/')
 	{
 		this->status_code = FORBIDDEN;
 		#ifdef DEBUG
@@ -107,7 +107,7 @@ void Response::set_response_error_page()
 	std::string raw_body;
 
 
-	if (path.back() == '/')
+	if (path[path.length() - 1] == '/')
 		return ;
 	file.open(path.c_str(), std::ios::in);
 	if (!file.good())
