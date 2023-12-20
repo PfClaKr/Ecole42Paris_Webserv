@@ -47,7 +47,6 @@ int parse_https_request_header(Request &request, std::string headerline)
 	val = headerline.substr(last, next);
 	val.erase(0, val.find_first_not_of(" "));
 	val.erase(val.find_last_not_of(" ") + 1);
-	transform(val.begin(), val.end(), val.begin(), ::tolower);
 	request.header[key] = val;
 	return 0;
 }

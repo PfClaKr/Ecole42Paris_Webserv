@@ -34,6 +34,58 @@ int	Response::check_host_in_header(Request &request)
 	return 0;
 }
 
+bool	Response::process_unchunk(Request &request)
+{
+	if (request.header.find("transfer-encoding") == request.header.end())
+		return true;
+	if (request.header["transfer-encoding"].compare("chunked") == 0)
+	{
+		size_t next = 0, last = 0;
+		std::string delim = "\r\n";
+		std::string tmp, data;
+		size_t len = 0;
+		std::stringstream ss;
+		std::string result;
+		while ((next = request.body.find(delim, last)) != std::string::npos)
+		{
+			tmp = request.body.substr(last, next - last);
+			ss << tmp;
+			ss >> std::hex >> len;
+			if (len == 0)
+			{
+				request.body = result;
+				#ifdef DEBUG
+					std::cout << RED << "============unchunk===============" << std::endl;
+					std::cout << "result body : " << request.body << RESET <<std::endl;
+				#endif
+				return true;
+			}
+			last = next + delim.length();
+			if ((next = request.body.find(delim, last)) == std::string::npos)
+			{
+				this->status_code = BAD_REQUEST;
+				return false;
+			}
+			data = request.body.substr(last, next - last);
+			last = next + delim.length();
+			if (len != data.length())
+			{
+				this->status_code = BAD_REQUEST;
+				return false;
+			}
+			result += data;
+		}
+		this->status_code = BAD_REQUEST;
+		return false;
+	}
+	else
+	{
+		this->status_code = BAD_REQUEST;
+		return false;
+	}
+	return true;
+}
+
 int	Response::check_body_size(Request &request, Context *context)
 {
 	int	content_length = std::atoi(request.header["content_length"].c_str());
@@ -198,20 +250,68 @@ void	Response::set_default_error_page(Context *context)
 	}
 }
 
-void	Response::make_error_response(Response &response, std::pair<Request, Context *> &response_set, int status_code)
+void	Response::make_error_response(std::pair<Request, Context *> &response_set, int status_code)
 {
-	(void) response;
 	set_default_error_page(response_set.second);
 	this->status_code = status_code;
 	set_response(response_set.first);
 }
 
-void	Response::make_http_response(Response &response, std::pair<Request, Context *> &response_set)
+bool	Response::process_request_body_if_multipart(Request &request)
 {
-	(void) response;
+	std::string type = request.header["content-type"];
+	if (!type.empty() && type.find("multipart") != std::string::npos)
+	{
+		size_t pos = type.find("multipart/form-data");
+		if (pos == std::string::npos)
+		{
+			this->status_code = UNSUPPORTED_MEDIA_TYPE;
+			return false;
+		}
+		pos = type.find("boundary=") + 9; //length of boundary=
+		std::string boundary = type.substr(pos, type.length() - pos);
+		pos = request.body.find("\r\n");
+		std::string first_line = request.body.substr(0, pos);
+		request.body.erase(0, pos + 2);
+		if (("--" + boundary) != first_line)
+		{
+			this->status_code = BAD_REQUEST;
+			return false;
+		}
+		pos = request.body.find("filename=\"") + 10; //length of filename="
+		std::string file_name = request.body.substr(pos, request.body.find("\"", pos) - pos);
+		this->upload_file_name = file_name;
+		pos = request.body.find("\r\n");
+		request.body.erase(0, pos + 2);
+		pos = request.body.find("\r\n");
+		request.body.erase(0, pos + 2);
+		request.body.erase(0, 2); //erase last \r\n
+		pos = request.body.find("--" + boundary + "--");
+		if (pos == std::string::npos)
+		{
+			this->status_code = BAD_REQUEST;
+			return false;
+		}
+		request.body.erase(pos, request.body.length() - pos + 2);
+		#ifdef DEBUG
+			std::cout << DARK_BLUE << "===================body if multipart===================" << std::endl;
+			std::cout << "boundary : " << boundary << std::endl;
+			std::cout << "first line : " << first_line << std::endl;
+			std::cout << "file name : " << file_name << RESET << std::endl;
+		#endif
+	}
+	return true;
+}
+
+void	Response::make_http_response(std::pair<Request, Context *> &response_set)
+{
 	try
 	{
 		set_default_error_page(response_set.second);
+		if (!process_request_body_if_multipart(response_set.first))
+			return (set_response(response_set.first));
+		if (!process_unchunk(response_set.first))
+			return (set_response(response_set.first));
 		if (!check_integrity_request(response_set))
 			return (set_response(response_set.first));
 		set_root_index_path(response_set.first, response_set.second);

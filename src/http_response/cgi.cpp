@@ -127,6 +127,7 @@ std::string	Cgi::set_output_in_response_body(Response *response)
 		std::stringstream ss;
 		ss << this->output.size();
 		std::string ret = ss.str();
+		std::cout << RED << this->output << RESET << std::endl;
 		response->set_header("Content-Length", ret);
 		return ((this->output.substr(output.find("\r") + 4)));
 	}

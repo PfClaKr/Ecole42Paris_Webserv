@@ -19,6 +19,7 @@ class Response
 		std::string path;
 		std::string query;
 		std::string location;
+		std::string upload_file_name;
 		std::map<std::string, std::string> header;
 		std::map<int, std::string> default_error_page;
 		std::pair<std::string, std::string> body;
@@ -41,12 +42,15 @@ class Response
 		void set_response(Request &request);
 		void set_default_error_page(Context *context);
 		void set_response_error_page();
+		bool process_request_body_if_multipart(Request &request);
+		bool process_unchunk(Request &request);
 		Response(const Response &ref);
 	public:
 		Response();
 		~Response();
-		void make_http_response(Response &response, std::pair<Request, Context *> &response_set);
-		void make_error_response(Response &response, std::pair<Request, Context *> &response_set, int status_code);
+		// void unchunk(Request &request);
+		void make_http_response(std::pair<Request, Context *> &response_set);
+		void make_error_response(std::pair<Request, Context *> &response_set, int status_code);
 		std::string get_path();
 		std::string get_query();
 		std::string get_status_line(int status);

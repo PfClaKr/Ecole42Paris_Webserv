@@ -70,7 +70,7 @@ std::string Server::recv_request(int fd)
 	char buf[2048];
 
 	memset(&buf, 0, sizeof(buf));
-	read_size = recv(fd, buf, sizeof(buf), MSG_DONTWAIT);
+	read_size = recv(fd, buf, sizeof(buf) - 1, MSG_DONTWAIT);
 
 	#ifdef DEBUG
 		std::cout << DARK_BLUE << "request fd: " << fd << RESET << std::endl;
@@ -101,8 +101,14 @@ void	Server::process_split_request(int event_fd, epoll_event *epoll_ev)
 void	Server::check_split_request()
 {
 	Request request = this->response_set.first;
-	int	content_length = std::atoi(request.header["content_length"].c_str());
-	if (request.body.size() < (unsigned long) content_length)
+	int	content_length = std::atoi(request.header["content-length"].c_str());
+	#ifdef DEBUG
+		std::cout << DARK_BLUE << "===================check split request==================" << std::endl;
+		std::cout << "header length : " << request.header["content-length"] << std::endl;
+		std::cout << "cotent_length : " << content_length << std::endl;
+		std::cout << "body length : " << request.body.length() << std::endl;
+	#endif
+	if (request.body.length() < (unsigned long) content_length)
 	{
 		this->split_request = true;
 		return ;
@@ -167,7 +173,7 @@ void	Server::init_response(int event_fd, epoll_event *epoll_ev)
 {
 	Response response;
 
-	response.make_http_response(response, response_set);
+	response.make_http_response(response_set);
 	send_response(response, event_fd);
 	if (!is_keep_alive())
 		remove_fd_in_epoll(this->epoll_fd, event_fd, epoll_ev);
@@ -206,7 +212,7 @@ void	Server::handle_epoll_events(int event_fd, epoll_event *epoll_ev)
 	catch (Request::parsingException &e)
 	{
 		Response response;
-		response.make_error_response(response, response_set, BAD_REQUEST);
+		response.make_error_response(response_set, BAD_REQUEST);
 		send_response(response, event_fd);
 		remove_fd_in_epoll(this->epoll_fd, event_fd, epoll_ev);
 	}

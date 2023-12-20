@@ -90,6 +90,17 @@ void	Response::handle_post_method(Request &request, Context *context)
 	Cgi cgi;
 	std::fstream file;
 	bool is_dir = this->path[this->path.length() - 1] == '/';
+	bool is_php = check_is_php(this->path);
+	const Context *http = context->get_parent();
+	std::string root = http->get_directive_by_key("root").front();
+	if (is_php)// www/query.php
+	{
+		this->path = this->path.substr(this->path.find_last_of("/"), this->path.length() - this->path.find_last_of("/"));
+		this->path = root + "/cgi-bin" + this->path;
+		#ifdef DEBUG
+			std::cout << DARK_BLUE << "php.file path change : " << "path: " << this->path << RESET << "\n";
+		#endif
+	}
 
 	file.open(this->path.c_str(), std::ios::in);
 	if (is_dir)
@@ -98,7 +109,7 @@ void	Response::handle_post_method(Request &request, Context *context)
 		file.close();
 		return ;
 	}
-	if (file.good())
+	if (file.good() && is_php)
 	{
 		try
 		{
@@ -106,23 +117,30 @@ void	Response::handle_post_method(Request &request, Context *context)
 		}
 		catch (Cgi::CgiException())
 		{
+			std::cout << RED << "!!!" << RESET << std::endl;
 			this->status_code = INTERNAL_SERVER_ERROR;
 			file.close();
-			return ;
 		}
 		body.first.clear();
 		body.second.clear();
 	}
+	else if (file.good())
+	{
+		this->status_code = METHOD_NOT_ALLOWED;
+		file.close();
+		return ;
+	}
 	else
 		this->status_code = NOT_FOUND;
 	file.close();
+	this->status_code = OK;
 }
 
 void	Response::handle_delete_method(Request &request)
 {
 	std::ifstream file(this->path.c_str());
 
-	bool is_dir = file.good() && !file.rdbuf()->in_avail();
+	bool is_dir = !(file.good() && !file.rdbuf()->in_avail());
 	file.close();
 
 	if (is_dir)
